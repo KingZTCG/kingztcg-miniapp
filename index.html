@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+<script src="https://telegram.org/js/telegram-web-app.js">
+</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #101114;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: auto;
+      padding: 22px 18px 95px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      background: #24262b;
+      border-radius: 14px;
+      color: #e9c66c;
+      font-size: 27px;
+    }
+
+    h1 { font-size: 23px; margin: 0; }
+    h2 { font-size: 21px; margin: 0 0 12px; }
+
+    .subtitle {
+      color: #a6aab2;
+      font-size: 11px;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .welcome {
+      background: #24262b;
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .welcome p, .muted {
+      color: #a6aab2;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .tile {
+      background: #24262b;
+      border: 1px solid #33363c;
+      border-radius: 15px;
+      padding: 20px 15px;
+      text-align: left;
+      color: white;
+      cursor: pointer;
+      min-height: 125px;
+    }
+
+    .tile .emoji {
+      font-size: 26px;
+      margin-bottom: 13px;
+    }
+
+    .tile strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .tile span {
+      display: block;
+      color: #a6aab2;
+      font-size: 11px;
+      margin-top: 7px;
+    }
+
+    .profile {
+      width: 100%;
+      margin-top: 14px;
+      background: #24262b;
+      border: 1px solid #33363c;
+      border-radius: 15px;
+      padding: 18px;
+      color: white;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .back {
+      border: 0;
+      background: transparent;
+      color: #e9c66c;
+      padding: 0;
+      margin-bottom: 24px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .panel {
+      background: #24262b;
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 15px;
+    }
+
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1c1e22;
+      border-top: 1px solid #33363c;
+      display: flex;
+      justify-content: space-around;
+      padding: 15px 5px 22px;
+    }
+
+    .nav button {
+      background: none;
+      border: none;
+      color: #a6aab2;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .nav button.selected { color: #e9c66c; }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="logo">♛</div>
+    <div>
+      <h1>KINGZTCG</h1>
+      <div class="subtitle">COLLECT • CLAIM • CONQUER</div>
+    </div>
+  </div>
+
+  <section id="home" class="page active">
+    <div class="welcome">
+      <p>WELCOME TO KINGZTCG</p>
+      <h2>Your collection, your kingdom.</h2>
+      <p>Manage your claims, payments and collections in one place.</p>
+    </div>
+
+    <div class="grid">
+      <button class="tile" onclick="showPage('orders')">
+        <div class="emoji">📦</div>
+        <strong>My Orders</strong>
+        <span>Claimed cards</span>
+      </button>
+
+      <button class="tile" onclick="showPage('invoices')">
+        <div class="emoji">🧾</div>
+        <strong>Invoices</strong>
+        <span>Billing & balances</span>
+      </button>
+
+      <button class="tile" onclick="showPage('payment')">
+        <div class="emoji">💳</div>
+        <strong>Payment</strong>
+        <span>PayNow & receipts</span>
+      </button>
+
+      <button class="tile" onclick="showPage('collection')">
+        <div class="emoji">🚚</div>
+        <strong>Collection</strong>
+        <span>Mailing & holds</span>
+      </button>
+    </div>
+
+    <button class="profile" onclick="showPage('profile')">
+      👤 &nbsp; My Profile — Contact & Mailing Address →
+    </button>
+  </section>
+
+  <section id="orders" class="page">
+    <button class="back" onclick="showPage('home')">← Back</button>
+    <h2>📦 My Orders</h2>
+    <div class="panel muted">Your claimed cards will appear here.</div>
+  </section>
+
+  <section id="invoices" class="page">
+    <button class="back" onclick="showPage('home')">← Back</button>
+    <h2>🧾 My Invoices</h2>
+    <div class="panel muted">Your invoices and payment balances will appear here.</div>
+  </section>
+
+  <section id="payment" class="page">
+    <button class="back" onclick="showPage('home')">← Back</button>
+    <h2>💳 Payment</h2>
+    <div class="panel muted">PayNow QR and receipt upload will appear here.</div>
+  </section>
+
+  <section id="collection" class="page">
+    <button class="back" onclick="showPage('home')">← Back</button>
+    <h2>🚚 Collection</h2>
+    <div class="panel muted">Mailing, self-collection and card holds will appear here.</div>
+  </section>
+
+  <section id="profile" class="page">
+    <button class="back" onclick="showPage('home')">← Back</button>
+    <h2>👤 My Profile</h2>
+    <div class="panel muted">Your contact details and mailing address will appear here.</div>
+  </section>
+
+</div>
+
+<nav class="nav">
+  <button id="nav-home" class="selected" onclick="showPage('home')">⌂ Home</button>
+  <button id="nav-orders" onclick="showPage('orders')">📦 Orders</button>
+  <button id="nav-payment" onclick="showPage('payment')">💳 Payment</button>
+  <button id="nav-profile" onclick="showPage('profile')">👤 Profile</button>
+</nav>
+
+<script>
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(function(page) {
+      page.classList.remove('active');
+    });
+
+    document.getElementById(pageId).classList.add('active');
+
+    document.querySelectorAll('.nav button').forEach(function(button) {
+      button.classList.remove('selected');
+    });
+
+    const activeButton = document.getElementById('nav-' + pageId);
+
+    if (activeButton) {
+      activeButton.classList.add('selected');
+    }
+
+    window.scrollTo(0, 0);
+  }
+</script>
+
+</body>
+</html>
