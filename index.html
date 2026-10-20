@@ -9,6 +9,22 @@
 <script>
   
 const KINGZTCG_API_URL = 'https://script.google.com/macros/s/AKfycbxTg6qoY7WuIuVzym_Dp2AyRPlsmZEy8-BhUC4jO5VLtNYVa5VWQbogTeO10819gosx7g/exec';
+  
+<script>
+  window.addEventListener('load', async function () {
+    try {
+      await fetch(KINGZTCG_API_URL, {
+        method: 'GET',
+        mode: 'no-cors'
+      });
+
+      alert('👑 API request sent successfully.');
+    } catch (error) {
+      alert('⚠️ API connection failed.');
+    }
+  });
+</script>
+
   const tg = window.Telegram?.WebApp;
 
   if (tg) {
