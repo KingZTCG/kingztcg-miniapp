@@ -21,19 +21,7 @@
       Boolean(tg.initData)
     );
   }
-
-  window.addEventListener('load', async function () {
-    try {
-      await fetch(KINGZTCG_API_URL, {
-        method: 'GET',
-        mode: 'no-cors'
-      });
-
-      alert('👑 API request sent successfully.');
-    } catch (error) {
-      alert('⚠️ API connection failed.');
-    }
-  });
+  
 </script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
