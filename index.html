@@ -278,5 +278,24 @@
   }
 </script>
 
+<script>
+  window.addEventListener('load', function () {
+    const tg = window.Telegram?.WebApp;
+    const status = document.createElement('div');
+
+    status.style.cssText =
+      'position:fixed;top:10px;right:10px;' +
+      'z-index:9999;background:#24262b;' +
+      'color:#e9c66c;padding:10px;' +
+      'border-radius:8px;font-size:12px;';
+
+    status.textContent = tg?.initData
+      ? '👑 Telegram Login: Available'
+      : '⚠️ Telegram Login: Missing';
+
+    document.body.appendChild(status);
+  });
+</script>
+
 </body>
 </html>
