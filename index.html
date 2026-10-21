@@ -9,6 +9,38 @@
 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
+  
+async function testKingzTCGTelegramLogin() {
+  const telegram = window.Telegram?.WebApp;
+
+  if (!telegram?.initData) {
+    alert('⚠️ Please open KingzTCG inside Telegram.');
+    return;
+  }
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: telegram.initData
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success === true) {
+      alert('👑 Telegram login verified successfully!');
+    } else {
+      alert('⚠️ Telegram login verification failed.');
+    }
+  } catch (error) {
+    alert('⚠️ Cannot connect to the authentication API.');
+  }
+}
+
+window.addEventListener('load', testKingzTCGTelegramLogin);
+
 
   const tg = window.Telegram?.WebApp;
 
