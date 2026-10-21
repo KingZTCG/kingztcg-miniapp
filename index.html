@@ -9,6 +9,23 @@
 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
+  
+async function testKingzTCGConnection() {
+  try {
+    const response = await fetch(KINGZTCG_API_URL);
+    const data = await response.json();
+
+    if (response.ok && data.success === true && data.status === 'online') {
+      alert('👑 KingzTCG API connected successfully!');
+    } else {
+      alert('⚠️ API returned an unexpected response.');
+    }
+  } catch (error) {
+    alert('⚠️ Cannot read the API response.');
+  }
+}
+
+window.addEventListener('load', testKingzTCGConnection);
 
   const tg = window.Telegram?.WebApp;
 
