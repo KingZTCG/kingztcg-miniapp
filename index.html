@@ -32,7 +32,7 @@ async function testKingzTCGTelegramLogin() {
     if (response.ok && result.success === true) {
       alert('👑 Telegram login verified successfully!');
     } else {
-      alert('⚠️ Telegram login verification failed.');
+      alert('⚠️ Login failed: ' + (result.reason || 'unknown'));
     }
   } catch (error) {
     alert('⚠️ Cannot connect to the authentication API.');
