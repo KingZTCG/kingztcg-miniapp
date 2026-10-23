@@ -10,12 +10,14 @@
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
 
-
 async function testKingzTCGMyInvoices() {
   const tg = window.Telegram?.WebApp;
   const container = document.getElementById('kingztcg-invoice-list');
 
-  if (!container) return;
+  if (!container) {
+    alert('Invoice display area not found.');
+    return;
+  }
 
   if (!tg || !tg.initData) {
     container.textContent = 'Please open the Mini App inside Telegram.';
@@ -43,7 +45,7 @@ async function testKingzTCGMyInvoices() {
     const result = await response.json();
 
     if (!result.success || !Array.isArray(result.invoices)) {
-      throw new Error('Unable to retrieve invoices');
+      throw new Error('Invoice lookup failed');
     }
 
     container.replaceChildren();
@@ -85,39 +87,6 @@ async function testKingzTCGMyInvoices() {
   } catch (error) {
     container.textContent =
       'Unable to load invoices. Please try again.';
-  }
-}
- 
-  if (!tg || !tg.initData) {
-    alert('Please open the Mini App inside Telegram.');
-    return;
-  }
-
-  try {
-    const response = await fetch(KINGZTCG_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=UTF-8'
-      },
-      body: JSON.stringify({
-        action: 'invoices',
-        initData: tg.initData
-      })
-    });
-
-    const result = await response.json();
-
-    if (!result.success) {
-      alert('Invoice request failed: ' + result.reason);
-      return;
-    }
-
-    alert(
-      '👑 Invoice lookup successful!\n' +
-      'Your invoices found: ' + result.invoices.length
-    );
-  } catch (error) {
-    alert('Unable to connect to invoice API.');
   }
 }
 
