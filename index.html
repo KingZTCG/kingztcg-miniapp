@@ -11,7 +11,84 @@
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
 
   
+
 async function testKingzTCGMyInvoices() {
+  const tg = window.Telegram?.WebApp;
+  const container = document.getElementById('kingztcg-invoice-list');
+
+  if (!container) return;
+
+  if (!tg || !tg.initData) {
+    container.textContent = 'Please open the Mini App inside Telegram.';
+    return;
+  }
+
+  container.textContent = 'Loading your invoices...';
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'invoices',
+        initData: tg.initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API connection failed');
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !Array.isArray(result.invoices)) {
+      throw new Error('Unable to retrieve invoices');
+    }
+
+    container.replaceChildren();
+
+    if (result.invoices.length === 0) {
+      container.textContent = 'You have no invoices yet.';
+      return;
+    }
+
+    result.invoices.forEach(function(invoice) {
+      const card = document.createElement('div');
+      card.className = 'panel';
+      card.style.marginBottom = '12px';
+
+      const fields = [
+        ['Invoice', invoice.invoiceId],
+        ['Order', invoice.orderId],
+        ['Total Amount', invoice.totalAmount],
+        ['Balance Due', invoice.balanceDue],
+        ['Payment Status', invoice.paymentStatus]
+      ];
+
+      fields.forEach(function(field) {
+        const line = document.createElement('p');
+        const label = document.createElement('strong');
+
+        label.textContent = field[0] + ': ';
+        line.appendChild(label);
+        line.appendChild(
+          document.createTextNode(String(field[1] ?? ''))
+        );
+
+        card.appendChild(line);
+      });
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    container.textContent =
+      'Unable to load invoices. Please try again.';
+  }
+}
+ {
   const tg = window.Telegram?.WebApp;
 
   if (!tg || !tg.initData) {
