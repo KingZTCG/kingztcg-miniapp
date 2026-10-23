@@ -10,7 +10,6 @@
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
 
-  
 
 async function testKingzTCGMyInvoices() {
   const tg = window.Telegram?.WebApp;
@@ -88,9 +87,7 @@ async function testKingzTCGMyInvoices() {
       'Unable to load invoices. Please try again.';
   }
 }
- {
-  const tg = window.Telegram?.WebApp;
-
+ 
   if (!tg || !tg.initData) {
     alert('Please open the Mini App inside Telegram.');
     return;
