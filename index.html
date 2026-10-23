@@ -9,6 +9,44 @@
 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
+
+  
+async function testKingzTCGMyInvoices() {
+  const tg = window.Telegram?.WebApp;
+
+  if (!tg || !tg.initData) {
+    alert('Please open the Mini App inside Telegram.');
+    return;
+  }
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'invoices',
+        initData: tg.initData
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      alert('Invoice request failed: ' + result.reason);
+      return;
+    }
+
+    alert(
+      '👑 Invoice lookup successful!\n' +
+      'Your invoices found: ' + result.invoices.length
+    );
+  } catch (error) {
+    alert('Unable to connect to invoice API.');
+  }
+}
+
   
 async function testKingzTCGTelegramLogin() {
   const telegram = window.Telegram?.WebApp;
