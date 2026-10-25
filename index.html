@@ -81,6 +81,33 @@ async function testKingzTCGMyInvoices() {
         card.appendChild(line);
       });
 
+const cardsHeading = document.createElement('h4');
+cardsHeading.textContent = 'Cards Purchased';
+cardsHeading.style.marginTop = '16px';
+card.appendChild(cardsHeading);
+
+if (Array.isArray(invoice.cards) && invoice.cards.length > 0) {
+  invoice.cards.forEach(function(item) {
+    const cardLine = document.createElement('p');
+
+    const name = String(item.cardName || 'Unnamed card');
+    const quantity = String(item.quantity || '1');
+    const price = String(item.unitPrice || '');
+    const subtotal = String(item.subtotal || '');
+
+    cardLine.textContent =
+      name +
+      ' × ' + quantity +
+      (price ? ' | Unit: S$' + price : '') +
+      (subtotal ? ' | Subtotal: S$' + subtotal : '');
+
+    card.appendChild(cardLine);
+  });
+} else {
+  const emptyMessage = document.createElement('p');
+  emptyMessage.textContent = 'No card details available.';
+  card.appendChild(emptyMessage);
+}
       container.appendChild(card);
     });
 
