@@ -445,25 +445,31 @@ async function testKingzTCGTelegramLogin() {
 </nav>
 
 <script>
-  function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(function(page) {
-      page.classList.remove('active');
-    });
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(function(page) {
+    page.classList.remove('active');
+  });
 
-    document.getElementById(pageId).classList.add('active');
+  document.getElementById(pageId).classList.add('active');
 
-    document.querySelectorAll('.nav button').forEach(function(button) {
-      button.classList.remove('selected');
-    });
+  document.querySelectorAll('.nav button').forEach(function(button) {
+    button.classList.remove('selected');
+  });
 
-    const activeButton = document.getElementById('nav-' + pageId);
+  const activeButton = document.getElementById('nav-' + pageId);
 
-    if (activeButton) {
-      activeButton.classList.add('selected');
-    }
-
-    window.scrollTo(0, 0);
+  if (activeButton) {
+    activeButton.classList.add('selected');
   }
+
+  window.scrollTo(0, 0);
+
+  // Automatically load invoices when the customer opens My Invoices.
+  if (pageId === 'invoices') {
+    testKingzTCGMyInvoices();
+  }
+}
+
 </script>
 
 
