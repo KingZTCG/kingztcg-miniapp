@@ -10,6 +10,7 @@
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
 
+
 async function testKingzTCGMyInvoices() {
   const tg = window.Telegram?.WebApp;
   const container = document.getElementById('kingztcg-invoice-list');
@@ -19,12 +20,26 @@ async function testKingzTCGMyInvoices() {
     return;
   }
 
-  if (!tg || !tg.initData) {
+  if (!tg?.initData) {
     container.textContent = 'Please open the Mini App inside Telegram.';
     return;
   }
 
   container.textContent = 'Loading your invoices...';
+
+  const money = value => {
+    const number = Number(value);
+    return Number.isFinite(number)
+      ? 'S$' + number.toFixed(2)
+      : '—';
+  };
+
+  function addText(parent, text, tag = 'p') {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    parent.appendChild(element);
+    return element;
+  }
 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
@@ -58,56 +73,80 @@ async function testKingzTCGMyInvoices() {
     result.invoices.forEach(function(invoice) {
       const card = document.createElement('div');
       card.className = 'panel';
-      card.style.marginBottom = '12px';
+      card.style.marginBottom = '16px';
+      card.style.padding = '22px';
 
-      const fields = [
-        ['Invoice', invoice.invoiceId],
-        ['Order', invoice.orderId],
-        ['Total Amount', invoice.totalAmount],
-        ['Balance Due', invoice.balanceDue],
-        ['Payment Status', invoice.paymentStatus]
-      ];
+      const title = addText(
+        card,
+        '👑 Invoice ' + String(invoice.invoiceId || ''),
+        'h3'
+      );
+      title.style.marginTop = '0';
+      title.style.color = '#d4af37';
 
-      fields.forEach(function(field) {
-        const line = document.createElement('p');
-        const label = document.createElement('strong');
+      const order = addText(
+        card,
+        'Order: ' + String(invoice.orderId || '')
+      );
+      order.style.opacity = '0.8';
 
-        label.textContent = field[0] + ': ';
-        line.appendChild(label);
-        line.appendChild(
-          document.createTextNode(String(field[1] ?? ''))
-        );
+      const status = addText(
+        card,
+        'Payment Status: ' + String(invoice.paymentStatus || 'Unknown')
+      );
+      status.style.fontWeight = 'bold';
 
-        card.appendChild(line);
-      });
+      const divider = document.createElement('hr');
+      divider.style.border = '0';
+      divider.style.borderTop = '1px solid #444';
+      divider.style.margin = '20px 0';
+      card.appendChild(divider);
 
-const cardsHeading = document.createElement('h4');
-cardsHeading.textContent = 'Cards Purchased';
-cardsHeading.style.marginTop = '16px';
-card.appendChild(cardsHeading);
+      addText(card, '🃏 Cards Purchased', 'h4');
 
-if (Array.isArray(invoice.cards) && invoice.cards.length > 0) {
-  invoice.cards.forEach(function(item) {
-    const cardLine = document.createElement('p');
+      if (Array.isArray(invoice.cards) && invoice.cards.length > 0) {
+        invoice.cards.forEach(function(item) {
+          const row = document.createElement('div');
+          row.style.marginBottom = '14px';
 
-    const name = String(item.cardName || 'Unnamed card');
-    const quantity = String(item.quantity || '1');
-    const price = String(item.unitPrice || '');
-    const subtotal = String(item.subtotal || '');
+          const name = addText(
+            row,
+            String(item.cardName || 'Unnamed card') +
+              ' × ' + String(item.quantity ?? 1)
+          );
+          name.style.fontWeight = 'bold';
+          name.style.marginBottom = '4px';
 
-    cardLine.textContent =
-      name +
-      ' × ' + quantity +
-      (price ? ' | Unit: S$' + price : '') +
-      (subtotal ? ' | Subtotal: S$' + subtotal : '');
+          const price = addText(
+            row,
+            'Unit: ' + money(item.unitPrice) +
+            '  |  Subtotal: ' + money(item.subtotal)
+          );
+          price.style.fontSize = '14px';
+          price.style.opacity = '0.75';
 
-    card.appendChild(cardLine);
-  });
-} else {
-  const emptyMessage = document.createElement('p');
-  emptyMessage.textContent = 'No card details available.';
-  card.appendChild(emptyMessage);
-}
+          card.appendChild(row);
+        });
+      } else {
+        addText(card, 'No card details available.');
+      }
+
+      const totalDivider = divider.cloneNode();
+      card.appendChild(totalDivider);
+
+      const total = addText(
+        card,
+        'Total Amount: ' + money(invoice.totalAmount)
+      );
+      total.style.fontWeight = 'bold';
+
+      const balance = addText(
+        card,
+        'Balance Due: ' + money(invoice.balanceDue)
+      );
+      balance.style.fontWeight = 'bold';
+      balance.style.color = '#d4af37';
+
       container.appendChild(card);
     });
 
@@ -116,6 +155,7 @@ if (Array.isArray(invoice.cards) && invoice.cards.length > 0) {
       'Unable to load invoices. Please try again.';
   }
 }
+
 
   
 async function testKingzTCGTelegramLogin() {
