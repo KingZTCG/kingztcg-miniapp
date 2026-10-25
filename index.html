@@ -500,6 +500,62 @@ function showPage(pageId) {
   }
 }
 
+
+async function loadKingzTCGPaymentBalance() {
+  const container = document.getElementById(
+    'kingztcg-payment-balance'
+  );
+
+  if (!container) return;
+
+  const tg = window.Telegram?.WebApp;
+
+  if (!tg?.initData) {
+    container.textContent = 'Open inside Telegram';
+    return;
+  }
+
+  container.textContent = 'Loading balance...';
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'invoices',
+        initData: tg.initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API request failed');
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !Array.isArray(result.invoices)) {
+      throw new Error('Invalid invoice response');
+    }
+
+    const balance = result.invoices.reduce(function(total, invoice) {
+      const amount = Number(invoice.balanceDue);
+
+      if (!Number.isFinite(amount) || amount < 0) {
+        throw new Error('Invalid balance amount');
+      }
+
+      return total + amount;
+    }, 0);
+
+    container.textContent = 'S$' + balance.toFixed(2);
+
+  } catch (error) {
+    container.textContent = 'Unable to load balance';
+  }
+}
+
 </script>
 
 
