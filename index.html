@@ -414,11 +414,44 @@ async function testKingzTCGTelegramLogin() {
 
   </section>
 
-  <section id="payment" class="page">
-    <button class="back" onclick="showPage('home')">← Back</button>
-    <h2>💳 Payment</h2>
-    <div class="panel muted">PayNow QR and receipt upload will appear here.</div>
-  </section>
+ 
+<section id="payment" class="page">
+  <button class="back" onclick="showPage('home')">← Back</button>
+
+  <h2>Payment</h2>
+
+  <div class="panel">
+    <h3>Outstanding Balance</h3>
+    <p id="kingztcg-payment-balance"
+       style="font-size:26px; font-weight:bold; color:#d4af37;">
+      Loading balance...
+    </p>
+    <p class="muted">Your unpaid invoice balance will appear here.</p>
+  </div>
+
+  <div class="panel">
+    <h3>PayNow QR Code</h3>
+    <p class="muted">
+      Your PayNow QR code will be displayed here.
+    </p>
+  </div>
+
+  <div class="panel">
+    <h3>Payment Receipt</h3>
+    <p class="muted">
+      Upload your payment screenshot after transferring.
+    </p>
+    <p class="muted">Receipt upload coming soon.</p>
+  </div>
+
+  <div class="panel">
+    <p class="muted">
+      All payments are verified manually.
+      Uploading a receipt does not automatically mark an invoice as paid.
+    </p>
+  </div>
+</section>
+
 
   <section id="collection" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
