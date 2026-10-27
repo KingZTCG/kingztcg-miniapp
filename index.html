@@ -710,6 +710,46 @@ async function loadKingzTCGPaymentBalance() {
   }
 }
 
+function kingzTCGValidateReceiptSelection() {
+  const invoiceSelect = document.getElementById(
+    'kingztcg-receipt-invoice'
+  );
+
+  const fileInput = document.getElementById(
+    'kingztcg-receipt-file'
+  );
+
+  if (!invoiceSelect || !fileInput) {
+    return 'Receipt form not found.';
+  }
+
+  if (!invoiceSelect.value) {
+    return 'Please select an unpaid invoice.';
+  }
+
+  const file = fileInput.files[0];
+
+  if (!file) {
+    return 'Please select your payment screenshot.';
+  }
+
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    return 'Please select a JPG, PNG or WebP image.';
+  }
+
+  if (file.size === 0 || file.size > 5 * 1024 * 1024) {
+    return 'Your screenshot must be under 5 MB.';
+  }
+
+  return null;
+}
+
 </script>
 
 
