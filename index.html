@@ -227,6 +227,68 @@ async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Da
   return await response.json();
 }
 
+
+async function kingzTCGLoadReceiptInvoices() {
+  const tg = window.Telegram?.WebApp;
+  const select = document.getElementById('kingztcg-receipt-invoice');
+
+  if (!select) return;
+
+  select.replaceChildren(new Option('Loading invoices...', ''));
+
+  if (!tg?.initData) {
+    select.replaceChildren(new Option('Please open inside Telegram', ''));
+    return;
+  }
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'invoices',
+        initData: tg.initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API connection failed');
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !Array.isArray(result.invoices)) {
+      throw new Error('Unable to load invoices');
+    }
+
+    const unpaidInvoices = result.invoices.filter(function(invoice) {
+      const balance = Number(invoice.balanceDue);
+      return Number.isFinite(balance) && balance > 0;
+    });
+
+    select.replaceChildren(new Option('Select an unpaid invoice', ''));
+
+    unpaidInvoices.forEach(function(invoice) {
+      const option = new Option(
+        String(invoice.invoiceId) +
+          ' — S$' + Number(invoice.balanceDue).toFixed(2),
+        String(invoice.invoiceId)
+      );
+
+      select.add(option);
+    });
+
+    if (unpaidInvoices.length === 0) {
+      select.replaceChildren(new Option('No unpaid invoices', ''));
+    }
+
+  } catch (error) {
+    select.replaceChildren(new Option('Unable to load invoices', ''));
+  }
+}
+
   
 </script>
 
