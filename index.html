@@ -646,11 +646,12 @@ function showPage(pageId) {
     testKingzTCGMyInvoices();
   }
   
+
 if (pageId === 'payment') {
   loadKingzTCGPaymentBalance();
   kingzTCGLoadReceiptInvoices();
+  kingzTCGConnectReceiptForm();
 }
-
 
 }
 
