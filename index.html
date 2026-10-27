@@ -9,9 +9,7 @@
 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
-
-
-async function testKingzTCGMyInvoices() {
+ async function testKingzTCGMyInvoices() {
   const tg = window.Telegram?.WebApp;
   const container = document.getElementById('kingztcg-invoice-list');
 
@@ -198,6 +196,37 @@ async function testKingzTCGTelegramLogin() {
       Boolean(tg.initData)
     );
   }
+
+
+async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Data) {
+  const tg = window.Telegram?.WebApp;
+
+  if (!tg || !tg.initData) {
+    throw new Error('Please open KingzTCG inside Telegram.');
+  }
+
+  const response = await fetch(KINGZTCG_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=UTF-8'
+    },
+    body: JSON.stringify({
+      action: 'upload_receipt',
+      initData: tg.initData,
+      invoiceId: invoiceId,
+      fileName: fileName,
+      mimeType: mimeType,
+      base64Data: base64Data
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Receipt upload connection failed.');
+  }
+
+  return await response.json();
+}
+
   
 </script>
 
