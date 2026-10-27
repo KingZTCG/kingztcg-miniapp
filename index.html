@@ -485,7 +485,21 @@ async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Da
     <p class="muted">
       Upload your payment screenshot after transferring.
     </p>
-    
+
+<label for="kingztcg-receipt-invoice">
+  Select invoice to pay
+</label>
+
+<select
+  id="kingztcg-receipt-invoice"
+  style="display:block; width:100%; padding:12px;
+         margin:12px 0 18px; border-radius:8px;"
+>
+  <option value="">
+    Invoice selection coming soon
+  </option>
+</select>
+
 <label for="kingztcg-receipt-file">
   Select your payment screenshot
 </label>
