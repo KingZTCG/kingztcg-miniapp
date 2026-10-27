@@ -750,6 +750,36 @@ function kingzTCGValidateReceiptSelection() {
   return null;
 }
 
+function kingzTCGReadReceiptImage(file) {
+  return new Promise(function(resolve, reject) {
+    const reader = new FileReader();
+
+    reader.onload = function() {
+      const result = reader.result;
+
+      if (typeof result !== 'string') {
+        reject(new Error('Unable to read screenshot.'));
+        return;
+      }
+
+      const commaIndex = result.indexOf(',');
+
+      if (commaIndex === -1) {
+        reject(new Error('Invalid screenshot data.'));
+        return;
+      }
+
+      resolve(result.slice(commaIndex + 1));
+    };
+
+    reader.onerror = function() {
+      reject(new Error('Unable to read screenshot.'));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
 </script>
 
 
