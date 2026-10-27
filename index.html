@@ -805,6 +805,31 @@ function kingzTCGUpdateReceiptButton() {
   }
 }
 
+
+function kingzTCGConnectReceiptForm() {
+  const invoiceSelect = document.getElementById(
+    'kingztcg-receipt-invoice'
+  );
+
+  const fileInput = document.getElementById(
+    'kingztcg-receipt-file'
+  );
+
+  if (!invoiceSelect || !fileInput) return;
+
+  invoiceSelect.addEventListener(
+    'change',
+    kingzTCGUpdateReceiptButton
+  );
+
+  fileInput.addEventListener(
+    'change',
+    kingzTCGUpdateReceiptButton
+  );
+
+  kingzTCGUpdateReceiptButton();
+}
+
   
 </script>
 
