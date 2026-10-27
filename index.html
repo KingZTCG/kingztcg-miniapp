@@ -646,9 +646,11 @@ function showPage(pageId) {
     testKingzTCGMyInvoices();
   }
   
-  if (pageId === 'payment') {
+if (pageId === 'payment') {
   loadKingzTCGPaymentBalance();
+  kingzTCGLoadReceiptInvoices();
 }
+
 
 }
 
