@@ -780,6 +780,32 @@ function kingzTCGReadReceiptImage(file) {
   });
 }
 
+function kingzTCGUpdateReceiptButton() {
+  const button = document.getElementById(
+    'kingztcg-upload-receipt'
+  );
+
+  const status = document.getElementById(
+    'kingztcg-receipt-status'
+  );
+
+  if (!button || !status) return;
+
+  const error = kingzTCGValidateReceiptSelection();
+
+  // Keep uploading disabled until the submission
+  // process is fully connected and tested.
+  button.disabled = true;
+
+  if (error) {
+    status.textContent = error;
+  } else {
+    status.textContent =
+      'Screenshot ready. Upload will be enabled soon.';
+  }
+}
+
+  
 </script>
 
 
