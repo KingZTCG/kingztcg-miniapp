@@ -456,7 +456,34 @@ async function testKingzTCGTelegramLogin() {
     <p class="muted">
       Upload your payment screenshot after transferring.
     </p>
-    <p class="muted">Receipt upload coming soon.</p>
+    
+<label for="kingztcg-receipt-file">
+  Select your payment screenshot
+</label>
+
+<input
+  type="file"
+  id="kingztcg-receipt-file"
+  accept="image/jpeg,image/png,image/webp"
+  style="display:block; margin:12px 0; width:100%;"
+>
+
+<button
+  type="button"
+  id="kingztcg-upload-receipt"
+  disabled
+>
+  Upload Receipt
+</button>
+
+<p
+  id="kingztcg-receipt-status"
+  class="muted"
+  aria-live="polite"
+>
+  Receipt upload is not enabled yet.
+</p>
+
   </div>
 
   <div class="panel">
