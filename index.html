@@ -227,6 +227,90 @@ async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Da
   return await response.json();
 }
 
+async function kingzTCGHandleReceiptUpload() {
+  const invoiceSelect = document.getElementById(
+    'kingztcg-receipt-invoice'
+  );
+  const fileInput = document.getElementById(
+    'kingztcg-receipt-file'
+  );
+  const button = document.getElementById(
+    'kingztcg-receipt-upload'
+  );
+  const status = document.getElementById(
+    'kingztcg-receipt-status'
+  );
+
+  if (!invoiceSelect || !fileInput || !button || !status) {
+    return;
+  }
+
+  if (button.dataset.uploading === 'true') {
+    return;
+  }
+
+  const validation = kingzTCGValidateReceiptSelection();
+
+  if (!validation.success) {
+    status.textContent =
+      validation.reason || 'Please check your receipt.';
+    return;
+  }
+
+  const invoiceId = invoiceSelect.value;
+  const file = fileInput.files[0];
+
+  button.dataset.uploading = 'true';
+  button.disabled = true;
+  status.textContent = 'Uploading receipt. Please wait...';
+
+  try {
+    const base64Data = await kingzTCGReadReceiptImage(file);
+
+    const result = await kingzTCGSendReceiptUpload(
+      invoiceId,
+      file.name,
+      file.type,
+      base64Data
+    );
+
+    if (!result.success) {
+      const messages = {
+        receipt_already_submitted:
+          'A receipt is already pending verification.',
+        invoice_already_paid:
+          'This invoice has no outstanding balance.',
+        invoice_not_found:
+          'Invoice not found. Please refresh your invoices.',
+        missing_authentication:
+          'Please reopen KingzTCG inside Telegram.',
+        expired_authentication:
+          'Your Telegram session expired. Please reopen the Mini App.',
+        upload_busy:
+          'Another upload is being processed. Please try again.'
+      };
+
+      throw new Error(
+        messages[result.reason] ||
+        'Receipt upload failed. Please try again.'
+      );
+    }
+
+    status.textContent =
+      'Receipt submitted successfully! Pending manual verification.';
+
+    fileInput.value = '';
+    invoiceSelect.value = '';
+
+  } catch (error) {
+    status.textContent =
+      error.message || 'Receipt upload failed.';
+  } finally {
+    button.dataset.uploading = 'false';
+    button.disabled = true;
+  }
+}
+
 
 async function kingzTCGLoadReceiptInvoices() {
   const tg = window.Telegram?.WebApp;
