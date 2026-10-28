@@ -808,6 +808,12 @@ function kingzTCGUpdateReceiptButton() {
 
 
 function kingzTCGConnectReceiptForm() {
+if (window.kingzTCGReceiptFormConnected) {
+  return;
+}
+
+window.kingzTCGReceiptFormConnected = true;
+
   const invoiceSelect = document.getElementById(
     'kingztcg-receipt-invoice'
   );
