@@ -249,13 +249,13 @@ async function kingzTCGHandleReceiptUpload() {
     return;
   }
 
-  const validation = kingzTCGValidateReceiptSelection();
 
-  if (!validation.success) {
-    status.textContent =
-      validation.reason || 'Please check your receipt.';
-    return;
-  }
+const validationError = kingzTCGValidateReceiptSelection();
+
+if (validationError !== null) {
+  status.textContent = validationError;
+  return;
+}
 
   const invoiceId = invoiceSelect.value;
   const file = fileInput.files[0];
