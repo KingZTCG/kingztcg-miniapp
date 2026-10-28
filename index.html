@@ -9,6 +9,44 @@
 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
+async function kingzTCGCheckAdminAccess() {
+  const adminButton = document.getElementById('nav-admin');
+  const telegram = window.Telegram?.WebApp;
+
+  if (!adminButton) return;
+
+  // Keep the Admin button hidden until verified.
+  adminButton.style.display = 'none';
+
+  if (!telegram?.initData) return;
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'admin_verify',
+        initData: telegram.initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Admin verification failed');
+    }
+
+    const result = await response.json();
+
+    if (result.success === true && result.isAdmin === true) {
+      adminButton.style.display = '';
+    }
+
+  } catch (error) {
+    console.error('KingzTCG admin verification failed');
+  }
+}
+
  async function testKingzTCGMyInvoices() {
   const tg = window.Telegram?.WebApp;
   const container = document.getElementById('kingztcg-invoice-list');
