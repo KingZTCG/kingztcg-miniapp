@@ -228,7 +228,9 @@ async function testKingzTCGTelegramLogin() {
   if (tg) {
     tg.ready();
     tg.expand();
-
+    
+kingzTCGCheckAdminAccess();
+    
     console.log(
       'KingzTCG Telegram login available:',
       Boolean(tg.initData)
