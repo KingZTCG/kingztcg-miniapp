@@ -876,6 +876,11 @@ function kingzTCGUpdateReceiptButton() {
   );
 
   if (!button || !status) return;
+  if (button.dataset.uploading === 'true') {
+  button.disabled = true;
+  return;
+}
+
 
   const error = kingzTCGValidateReceiptSelection();
 
