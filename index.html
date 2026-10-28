@@ -865,6 +865,7 @@ function kingzTCGReadReceiptImage(file) {
   });
 }
 
+
 function kingzTCGUpdateReceiptButton() {
   const button = document.getElementById(
     'kingztcg-upload-receipt'
@@ -878,16 +879,14 @@ function kingzTCGUpdateReceiptButton() {
 
   const error = kingzTCGValidateReceiptSelection();
 
-  // Keep uploading disabled until the submission
-  // process is fully connected and tested.
   button.disabled = true;
 
-  if (error) {
+  if (error !== null) {
     status.textContent = error;
   } else {
+    button.disabled = false;
     status.textContent =
-      button.disabled = false;
-      status.textContent = 'Screenshot ready. Tap Upload Receipt to continue.';;
+      'Screenshot ready. Tap Upload Receipt to continue.';
   }
 }
 
