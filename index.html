@@ -807,13 +807,10 @@ function kingzTCGUpdateReceiptButton() {
   }
 }
 
-
 function kingzTCGConnectReceiptForm() {
-if (window.kingzTCGReceiptFormConnected) {
-  return;
-}
-
-window.kingzTCGReceiptFormConnected = true;
+  if (window.kingzTCGReceiptFormConnected) {
+    return;
+  }
 
   const invoiceSelect = document.getElementById(
     'kingztcg-receipt-invoice'
@@ -823,7 +820,15 @@ window.kingzTCGReceiptFormConnected = true;
     'kingztcg-receipt-file'
   );
 
-  if (!invoiceSelect || !fileInput) return;
+  const uploadButton = document.getElementById(
+    'kingztcg-receipt-upload'
+  );
+
+  if (!invoiceSelect || !fileInput || !uploadButton) {
+    return;
+  }
+
+  window.kingzTCGReceiptFormConnected = true;
 
   invoiceSelect.addEventListener(
     'change',
@@ -834,6 +839,10 @@ window.kingzTCGReceiptFormConnected = true;
     'change',
     kingzTCGUpdateReceiptButton
   );
+
+  uploadButton.addEventListener('click', function() {
+    kingzTCGHandleReceiptUpload();
+  });
 
   kingzTCGUpdateReceiptButton();
 }
