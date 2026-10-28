@@ -802,7 +802,8 @@ function kingzTCGUpdateReceiptButton() {
     status.textContent = error;
   } else {
     status.textContent =
-      'Screenshot ready. Upload will be enabled soon.';
+      button.disabled = false;
+      status.textContent = 'Screenshot ready. Tap Upload Receipt to continue.';;
   }
 }
 
