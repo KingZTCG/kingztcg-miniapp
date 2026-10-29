@@ -10,6 +10,7 @@
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
  
+
 async function kingzTCGLoadPendingPayments() {
   const container = document.getElementById(
     'kingztcg-admin-pending-payments'
@@ -71,28 +72,66 @@ async function kingzTCGLoadPendingPayments() {
           ? 'Date unavailable'
           : date.toLocaleString());
 
-    
-card.appendChild(invoice);
-card.appendChild(status);
-card.appendChild(submitted);
+      card.appendChild(invoice);
+      card.appendChild(status);
+      card.appendChild(submitted);
 
-// Show the receipt link only when available.
-if (payment.receiptUrl) {
-  const receiptButton = document.createElement('a');
+      // Existing receipt viewing feature.
+      if (payment.receiptUrl) {
+        const receiptButton = document.createElement('a');
 
-  receiptButton.textContent = '📷 View Receipt';
-  receiptButton.href = payment.receiptUrl;
-  receiptButton.target = '_blank';
-  receiptButton.rel = 'noopener noreferrer';
+        receiptButton.textContent = '📷 View Receipt';
+        receiptButton.href = payment.receiptUrl;
+        receiptButton.target = '_blank';
+        receiptButton.rel = 'noopener noreferrer';
 
-  card.appendChild(receiptButton);
-}
+        receiptButton.style.display = 'inline-block';
+        receiptButton.style.marginBottom = '12px';
 
-container.appendChild(card);
+        card.appendChild(receiptButton);
+      }
 
+      // New admin payment action buttons.
+      const actions = document.createElement('div');
+
+      actions.style.display = 'flex';
+      actions.style.gap = '10px';
+      actions.style.marginTop = '12px';
+
+      const verifyButton = document.createElement('button');
+      verifyButton.type = 'button';
+      verifyButton.textContent = '✅ Verify Payment';
+      verifyButton.disabled = true;
+      verifyButton.title = 'Secure verification coming next';
+
+      const rejectButton = document.createElement('button');
+      rejectButton.type = 'button';
+      rejectButton.textContent = '❌ Reject Payment';
+      rejectButton.disabled = true;
+      rejectButton.title = 'Secure rejection coming next';
+
+      [verifyButton, rejectButton].forEach(function(button) {
+        button.style.flex = '1';
+        button.style.padding = '12px 8px';
+        button.style.borderRadius = '8px';
+        button.style.border = '1px solid #b89b5e';
+        button.style.background = '#171717';
+        button.style.color = '#d4af37';
+        button.style.fontWeight = '600';
+        button.style.opacity = '0.55';
+        button.style.cursor = 'not-allowed';
+      });
+
+      actions.appendChild(verifyButton);
+      actions.appendChild(rejectButton);
+      card.appendChild(actions);
+
+      container.appendChild(card);
     });
 
   } catch (error) {
+    console.error('Pending payments error:', error);
+
     container.textContent =
       'Unable to load pending payments.';
   }
