@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -791,6 +790,21 @@ async function kingzTCGLoadReceiptInvoices() {
     }
 
     .nav button.selected { color: #e9c66c; }
+
+    /* Customer profile form */
+    .profile-field { display: block; margin-top: 16px; }
+    .profile-field label { display: block; margin-bottom: 7px; color: #e9c66c; font-size: 13px; font-weight: bold; }
+    .profile-field input, .profile-field textarea {
+      display: block; width: 100%; padding: 13px; border: 1px solid #454851;
+      border-radius: 10px; background: #16171a; color: #fff;
+      font: inherit; font-size: 15px;
+    }
+    .profile-field textarea { min-height: 100px; resize: vertical; }
+    .profile-field input:focus, .profile-field textarea:focus { outline: 2px solid #e9c66c; outline-offset: 1px; }
+    .profile-save { width: 100%; margin-top: 22px; padding: 14px; background: #d4af37;
+      color: #101114; border: 0; border-radius: 11px; font-weight: bold; font-size: 15px; cursor: pointer; }
+    .profile-save:disabled { opacity: .45; cursor: not-allowed; }
+    .profile-message { margin-top: 14px; min-height: 20px; font-size: 13px; line-height: 1.5; }
   </style>
 </head>
 
@@ -960,6 +974,39 @@ async function kingzTCGLoadReceiptInvoices() {
     <div class="panel muted">Mailing, self-collection and card holds will appear here.</div>
   </section>
 
+  <section id="profile" class="page">
+    <button class="back" onclick="showPage('home')">← Back</button>
+    <h2>👤 My Profile</h2>
+    <p class="muted">Save your contact and mailing details for future KingzTCG orders. You can update them anytime.</p>
+    <div class="panel">
+      <form id="kingztcg-profile-form" autocomplete="on">
+        <div class="profile-field">
+          <label for="kingztcg-profile-name">Full name *</label>
+          <input id="kingztcg-profile-name" name="name" autocomplete="name" maxlength="100" required placeholder="Name for mailing" />
+        </div>
+        <div class="profile-field">
+          <label for="kingztcg-profile-phone">Contact number *</label>
+          <input id="kingztcg-profile-phone" name="tel" type="tel" autocomplete="tel" maxlength="30" required placeholder="e.g. +65 8123 4567" />
+        </div>
+        <div class="profile-field">
+          <label for="kingztcg-profile-address">Mailing address *</label>
+          <textarea id="kingztcg-profile-address" name="street-address" autocomplete="street-address" maxlength="500" required placeholder="Block, street, unit number"></textarea>
+        </div>
+        <div class="profile-field">
+          <label for="kingztcg-profile-postal">Postal code *</label>
+          <input id="kingztcg-profile-postal" name="postal-code" autocomplete="postal-code" maxlength="20" required placeholder="Postal code" />
+        </div>
+        <div class="profile-field">
+          <label for="kingztcg-profile-country">Country *</label>
+          <input id="kingztcg-profile-country" name="country-name" autocomplete="country-name" maxlength="100" required value="Singapore" />
+        </div>
+        <button id="kingztcg-profile-save" class="profile-save" type="submit" disabled>Save My Details</button>
+        <p id="kingztcg-profile-status" class="profile-message muted" role="status" aria-live="polite">Open inside Telegram to load your profile.</p>
+      </form>
+    </div>
+    <p class="muted">Your profile is linked to your verified Telegram account. Your details are used for order contact and mailing.</p>
+  </section>
+
 <section id="admin" class="page">
   <button class="back" onclick="showPage('home')">← Back</button>
 
@@ -997,6 +1044,100 @@ async function kingzTCGLoadReceiptInvoices() {
 </nav>
 
 <script>
+
+// Customer Profile: requests are authenticated by Telegram initData on the server.
+function kingzTCGProfileStatus(message, success) {
+  const status = document.getElementById('kingztcg-profile-status');
+  if (!status) return;
+  status.textContent = message;
+  status.style.color = success ? '#b7e0b5' : '#a6aab2';
+}
+
+async function kingzTCGProfileRequest(profileAction, profile) {
+  const telegram = window.Telegram?.WebApp;
+  if (!telegram?.initData) {
+    throw new Error('Please open KingzTCG inside Telegram.');
+  }
+
+  const response = await fetch(KINGZTCG_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body: JSON.stringify({
+      action: 'customer_profile',
+      profileAction: profileAction,
+      initData: telegram.initData,
+      ...(profileAction === 'save' ? { profile: profile } : {})
+    })
+  });
+  if (!response.ok) throw new Error('Could not connect to the profile service.');
+  const result = await response.json();
+  if (result.success !== true) {
+    const messages = {
+      not_authorized: 'Telegram login could not be verified. Reopen the Mini App.',
+      customer_profiles_sheet_missing: 'Customer Profiles sheet is missing. Contact an admin.',
+      missing_required_fields: 'Please complete all required fields.',
+      field_too_long: 'One of your entries is too long.'
+    };
+    throw new Error(messages[result.reason] || 'Profile request failed: ' + String(result.reason || 'unknown_error'));
+  }
+  return result;
+}
+
+async function kingzTCGLoadCustomerProfile() {
+  const form = document.getElementById('kingztcg-profile-form');
+  const save = document.getElementById('kingztcg-profile-save');
+  if (!form || !save) return;
+  save.disabled = true;
+  kingzTCGProfileStatus('Loading your saved details...', false);
+  try {
+    const result = await kingzTCGProfileRequest('get');
+    const profile = result.profile || {};
+    document.getElementById('kingztcg-profile-name').value = profile.fullName || '';
+    document.getElementById('kingztcg-profile-phone').value = profile.contactNumber || '';
+    document.getElementById('kingztcg-profile-address').value = profile.mailingAddress || '';
+    document.getElementById('kingztcg-profile-postal').value = profile.postalCode || '';
+    document.getElementById('kingztcg-profile-country').value = profile.country || 'Singapore';
+    kingzTCGProfileStatus(result.profile ? 'Saved details loaded. You can update them below.' : 'No saved profile yet. Fill in your details to get started.', false);
+    save.disabled = false;
+  } catch (error) {
+    console.error('Profile loading failed:', error);
+    kingzTCGProfileStatus(error.message || 'Unable to load profile.', false);
+  }
+}
+
+function kingzTCGConnectProfileForm() {
+  const form = document.getElementById('kingztcg-profile-form');
+  const save = document.getElementById('kingztcg-profile-save');
+  if (!form || !save || form.dataset.connected === 'true') return;
+  form.dataset.connected = 'true';
+  form.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    if (save.disabled || !form.reportValidity()) return;
+    const profile = {
+      fullName: document.getElementById('kingztcg-profile-name').value.trim(),
+      contactNumber: document.getElementById('kingztcg-profile-phone').value.trim(),
+      mailingAddress: document.getElementById('kingztcg-profile-address').value.trim(),
+      postalCode: document.getElementById('kingztcg-profile-postal').value.trim(),
+      country: document.getElementById('kingztcg-profile-country').value.trim()
+    };
+    if (Object.values(profile).some(value => !value)) {
+      kingzTCGProfileStatus('Please complete all required fields.', false);
+      return;
+    }
+    save.disabled = true;
+    kingzTCGProfileStatus('Saving your profile...', false);
+    try {
+      await kingzTCGProfileRequest('save', profile);
+      kingzTCGProfileStatus('✓ Profile saved successfully!', true);
+    } catch (error) {
+      console.error('Profile saving failed:', error);
+      kingzTCGProfileStatus(error.message || 'Unable to save profile.', false);
+    } finally {
+      save.disabled = false;
+    }
+  });
+}
+
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(function(page) {
     page.classList.remove('active');
@@ -1015,6 +1156,11 @@ function showPage(pageId) {
   }
 
   window.scrollTo(0, 0);
+
+  if (pageId === 'profile') {
+    kingzTCGConnectProfileForm();
+    kingzTCGLoadCustomerProfile();
+  }
 
   // Automatically load invoices when the customer opens My Invoices.
   if (pageId === 'invoices') {
