@@ -1087,22 +1087,108 @@ async function kingzTCGLoadReceiptInvoices() {
  
 // Collection choice UI only. Saving requests and applying mailing fees require
 // an authenticated backend action; never alter balances on the client.
-function kingzTCGChooseCollection(method) {
+
+async function kingzTCGChooseCollection(method) {
   const valid = ['hold', 'mail', 'self_collection'];
   if (!valid.includes(method)) return;
-  document.querySelectorAll('.fulfilment-choice').forEach(function(button) {
-    button.setAttribute('aria-pressed', String(button.dataset.method === method));
-  });
+
+  // Prevent duplicate submissions while saving.
+  if (kingzTCGChooseCollection.busy) return;
+  kingzTCGChooseCollection.busy = true;
+
+  const buttons = document.querySelectorAll('.fulfilment-choice');
   const note = document.getElementById('kingztcg-fulfilment-note');
-  if (!note) return;
-  const messages = {
-    hold: 'Hold selected. This choice is not yet submitted to KingzTCG.',
-    mail: 'Mail selected. S$3.50 is not included in your displayed balance unless invoiced by admin. This choice is not yet submitted.',
-    self_collection: 'Self-Collection selected. This choice is not yet submitted to KingzTCG.'
+
+  const labels = {
+    hold: 'Hold',
+    mail: 'Mail',
+    self_collection: 'Self-Collection'
   };
-  note.textContent = messages[method];
+
+  buttons.forEach(function(button) {
+    button.disabled = true;
+  });
+
+  if (note) {
+    note.textContent = 'Saving your ' + labels[method] + ' selection...';
+  }
+
+  try {
+    const initData = window.Telegram &&
+      window.Telegram.WebApp &&
+      window.Telegram.WebApp.initData;
+
+    if (!initData) {
+      throw new Error('Please open the app through Telegram.');
+    }
+
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'collection_request',
+        initData: initData,
+        collectionMethod: method
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to connect to KingzTCG.');
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      if (result.reason === 'profile_required') {
+        throw new Error(
+          'Please complete your name, contact number and mailing address in My Profile before choosing Mail.'
+        );
+      }
+
+      if (result.reason === 'authentication_expired') {
+        throw new Error(
+          'Your Telegram session has expired. Please reopen the Mini App.'
+        );
+      }
+
+      throw new Error(
+        'Unable to save your selection. Please try again.'
+      );
+    }
+
+    buttons.forEach(function(button) {
+      button.setAttribute(
+        'aria-pressed',
+        String(button.dataset.method === method)
+      );
+    });
+
+    if (note) {
+      if (method === 'mail') {
+        note.textContent =
+          'Mail request saved! Tracked mailing is S$3.50 per shipment. Admin will review any existing mailing payment before billing.';
+      } else {
+        note.textContent =
+          labels[method] + ' selection saved successfully!';
+      }
+    }
+
+  } catch (error) {
+    if (note) {
+      note.textContent = error.message ||
+        'Unable to save your selection.';
+    }
+  } finally {
+    kingzTCGChooseCollection.busy = false;
+
+    buttons.forEach(function(button) {
+      button.disabled = false;
+    });
+  }
 }
- 
+
 // Customer Profile: requests are authenticated by Telegram initData on the server.
 function kingzTCGProfileStatus(message, success) {
   const status = document.getElementById('kingztcg-profile-status');
