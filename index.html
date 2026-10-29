@@ -121,9 +121,23 @@ async function kingzTCGLoadPendingPayments() {
 
       const rejectButton = document.createElement('button');
       rejectButton.type = 'button';
-      rejectButton.textContent = '❌ Reject Payment';
-      rejectButton.disabled = true;
-      rejectButton.title = 'Secure rejection coming next';
+      rejectButton.textContent = '❌ Reject Payment';    
+      rejectButton.disabled = false;
+      rejectButton.title = 'Reject this payment receipt';
+      rejectButton.onclick = async function() {
+      const confirmed = window.confirm(
+      'Reject this payment receipt?\n\n' +
+      'No payment will be recorded.'
+  );
+
+  if (!confirmed) return;
+
+  await kingzTCGSubmitAdminPaymentAction(
+    payment.receiptId,
+    'reject_payment'
+  );
+};
+
 
       [verifyButton, rejectButton].forEach(function(button) {
         button.style.flex = '1';
