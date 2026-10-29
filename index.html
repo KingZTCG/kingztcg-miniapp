@@ -240,18 +240,19 @@ async function testKingzTCGTelegramLogin() {
 
   const tg = window.Telegram?.WebApp;
 
-  if (tg) {
-    tg.ready();
-    tg.expand();
-    
-kingzTCGCheckAdminAccess();
-    
-    console.log(
-      'KingzTCG Telegram login available:',
-      Boolean(tg.initData)
-    );
-  }
+if (tg) {
+  tg.ready();
+  tg.expand();
 
+  window.addEventListener('load', function() {
+    kingzTCGCheckAdminAccess();
+  });
+
+  console.log(
+    'KingzTCG Telegram login available:',
+    Boolean(tg.initData)
+  );
+}
 
 async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Data) {
   const tg = window.Telegram?.WebApp;
