@@ -18,7 +18,14 @@ async function kingzTCGCheckAdminAccess() {
   // Keep the Admin button hidden until verified.
   adminButton.style.display = 'none';
 
-  if (!telegram?.initData) return;
+  
+if (!telegram?.initData) {
+  alert('👑 Admin check: Telegram initData is missing.');
+  return;
+}
+
+alert('👑 Admin check: Telegram initData found.');
+
 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
