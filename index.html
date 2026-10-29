@@ -9,6 +9,7 @@
 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
+  
 async function kingzTCGCheckAdminAccess() {
   const adminButton = document.getElementById('nav-admin');
   const telegram = window.Telegram?.WebApp;
@@ -37,15 +38,7 @@ if (!telegram?.initData) return;
     }
 
     const result = await response.json();
-    alert(
-  'Admin verification: ' +
-  JSON.stringify({
-    success: result.success,
-    isAdmin: result.isAdmin,
-    reason: result.reason || 'none'
-  })
-);
-
+    
     if (result.success === true && result.isAdmin === true) {
       adminButton.style.display = '';
     }
