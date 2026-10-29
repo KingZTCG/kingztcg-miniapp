@@ -9,7 +9,81 @@
 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
-  
+ 
+async function kingzTCGLoadPendingPayments() {
+  const container = document.getElementById(
+    'kingztcg-admin-pending-payments'
+  );
+
+  const telegram = window.Telegram?.WebApp;
+
+  if (!container || !telegram?.initData) return;
+
+  container.textContent = 'Loading pending payments...';
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'admin_pending_payments',
+        initData: telegram.initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API request failed');
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !Array.isArray(result.payments)) {
+      throw new Error('Unable to retrieve payments');
+    }
+
+    container.replaceChildren();
+
+    if (result.payments.length === 0) {
+      container.textContent = 'No pending payments.';
+      return;
+    }
+
+    result.payments.forEach(function(payment) {
+      const card = document.createElement('div');
+      card.className = 'panel';
+      card.style.marginBottom = '12px';
+
+      const invoice = document.createElement('h4');
+      invoice.textContent =
+        'Invoice: ' + String(payment.invoiceId || '');
+
+      const status = document.createElement('p');
+      status.textContent =
+        'Status: ' + String(payment.status || '');
+
+      const submitted = document.createElement('p');
+      const date = new Date(payment.submittedAt);
+
+      submitted.textContent = 'Submitted: ' +
+        (Number.isNaN(date.getTime())
+          ? 'Date unavailable'
+          : date.toLocaleString());
+
+      card.appendChild(invoice);
+      card.appendChild(status);
+      card.appendChild(submitted);
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    container.textContent =
+      'Unable to load pending payments.';
+  }
+}
+ 
 async function kingzTCGCheckAdminAccess() {
   const adminButton = document.getElementById('nav-admin');
   const telegram = window.Telegram?.WebApp;
