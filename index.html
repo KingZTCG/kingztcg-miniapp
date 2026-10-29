@@ -5,22 +5,22 @@
 <script src="https://telegram.org/js/telegram-web-app.js">
 </script>
   
-
+ 
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
  
-
+ 
 async function kingzTCGLoadPendingPayments() {
   const container = document.getElementById(
     'kingztcg-admin-pending-payments'
   );
-
+ 
   const telegram = window.Telegram?.WebApp;
-
+ 
   if (!container || !telegram?.initData) return;
-
+ 
   container.textContent = 'Loading pending payments...';
-
+ 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
@@ -32,71 +32,71 @@ async function kingzTCGLoadPendingPayments() {
         initData: telegram.initData
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('API request failed');
     }
-
+ 
     const result = await response.json();
-
+ 
     if (!result.success || !Array.isArray(result.payments)) {
       throw new Error('Unable to retrieve payments');
     }
-
+ 
     container.replaceChildren();
-
+ 
     if (result.payments.length === 0) {
       container.textContent = 'No pending payments.';
       return;
     }
-
+ 
     result.payments.forEach(function(payment) {
       const card = document.createElement('div');
       card.className = 'panel';
       card.style.marginBottom = '12px';
-
+ 
       const invoice = document.createElement('h4');
       invoice.textContent =
         'Invoice: ' + String(payment.invoiceId || '');
-
+ 
       const status = document.createElement('p');
       status.textContent =
         'Status: ' + String(payment.status || '');
-
+ 
       const submitted = document.createElement('p');
       const date = new Date(payment.submittedAt);
-
+ 
       submitted.textContent = 'Submitted: ' +
         (Number.isNaN(date.getTime())
           ? 'Date unavailable'
           : date.toLocaleString());
-
+ 
       card.appendChild(invoice);
       card.appendChild(status);
       card.appendChild(submitted);
-
+ 
       // Existing receipt viewing feature.
       if (payment.receiptUrl) {
         const receiptButton = document.createElement('a');
-
+ 
         receiptButton.textContent = '📷 View Receipt';
         receiptButton.href = payment.receiptUrl;
         receiptButton.target = '_blank';
         receiptButton.rel = 'noopener noreferrer';
-
+ 
         receiptButton.style.display = 'inline-block';
         receiptButton.style.marginBottom = '12px';
-
+ 
         card.appendChild(receiptButton);
       }
-
+ 
       // New admin payment action buttons.
       const actions = document.createElement('div');
-
+ 
       actions.style.display = 'flex';
       actions.style.gap = '10px';
       actions.style.marginTop = '12px';
-
+ 
       const verifyButton = document.createElement('button');
       verifyButton.type = 'button';
       verifyButton.textContent = '✅ Verify Payment';    
@@ -108,16 +108,16 @@ async function kingzTCGLoadPendingPayments() {
     'that this payment was received?\n\n' +
     'Select OK to continue with payment verification.'
   );
-
+ 
   if (!confirmed) return;
-
+ 
   await kingzTCGSubmitAdminPaymentAction(
     payment.receiptId,
     'verify_payment'
   );
 };
-
-
+ 
+ 
       const rejectButton = document.createElement('button');
       rejectButton.type = 'button';
       rejectButton.textContent = '❌ Reject Payment';    
@@ -128,16 +128,16 @@ async function kingzTCGLoadPendingPayments() {
       'Reject this payment receipt?\n\n' +
       'No payment will be recorded.'
   );
-
+ 
   if (!confirmed) return;
-
+ 
   await kingzTCGSubmitAdminPaymentAction(
     payment.receiptId,
     'reject_payment'
   );
 };
-
-
+ 
+ 
       [verifyButton, rejectButton].forEach(function(button) {
         button.style.flex = '1';
         button.style.padding = '12px 8px';
@@ -149,32 +149,32 @@ async function kingzTCGLoadPendingPayments() {
         button.style.opacity = '0.55';
         button.style.cursor = 'not-allowed';
       });
-
+ 
       actions.appendChild(verifyButton);
       actions.appendChild(rejectButton);
       card.appendChild(actions);
-
+ 
       container.appendChild(card);
     });
-
+ 
   } catch (error) {
     console.error('Pending payments error:', error);
-
+ 
     container.textContent =
       'Unable to load pending payments.';
   }
-
+ 
 async function kingzTCGSubmitAdminPaymentAction(
   receiptId,
   paymentAction
 ) {
   const telegram = window.Telegram?.WebApp;
-
+ 
   if (!telegram?.initData) {
     window.alert('Please open KingzTCG through Telegram.');
     return;
   }
-
+ 
   if (
     !receiptId ||
     !['verify_payment', 'reject_payment'].includes(paymentAction)
@@ -182,7 +182,7 @@ async function kingzTCGSubmitAdminPaymentAction(
     window.alert('Invalid payment request.');
     return;
   }
-
+ 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
@@ -196,20 +196,20 @@ async function kingzTCGSubmitAdminPaymentAction(
         paymentAction: paymentAction
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('API request failed');
     }
-
+ 
     const result = await response.json();
-
+ 
     if (result.success === true) {
       window.alert(
         paymentAction === 'verify_payment'
           ? 'Payment verified successfully!'
           : 'Payment receipt rejected.'
       );
-
+ 
       await kingzTCGLoadPendingPayments();
     } else {
       window.alert(
@@ -217,10 +217,10 @@ async function kingzTCGSubmitAdminPaymentAction(
         String(result.reason || 'unknown_error')
       );
     }
-
+ 
   } catch (error) {
     console.error('Admin payment action error:', error);
-
+ 
     window.alert(
       'Unable to complete payment action. ' +
       'Please check the payment records before trying again.'
@@ -232,14 +232,14 @@ async function kingzTCGSubmitAdminPaymentAction(
 async function kingzTCGCheckAdminAccess() {
   const adminButton = document.getElementById('nav-admin');
   const telegram = window.Telegram?.WebApp;
-
+ 
   if (!adminButton) return;
-
+ 
   // Keep the Admin button hidden until verified.
   adminButton.style.display = 'none';
   
 if (!telegram?.initData) return;
-
+ 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
@@ -251,52 +251,52 @@ if (!telegram?.initData) return;
         initData: telegram.initData
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('Admin verification failed');
     }
-
+ 
     const result = await response.json();
     
     if (result.success === true && result.isAdmin === true) {
       adminButton.style.display = '';
     }
-
+ 
   } catch (error) {
     console.error('KingzTCG admin verification failed');
   }
 }
-
+ 
  async function testKingzTCGMyInvoices() {
   const tg = window.Telegram?.WebApp;
   const container = document.getElementById('kingztcg-invoice-list');
-
+ 
   if (!container) {
     alert('Invoice display area not found.');
     return;
   }
-
+ 
   if (!tg?.initData) {
     container.textContent = 'Please open the Mini App inside Telegram.';
     return;
   }
-
+ 
   container.textContent = 'Loading your invoices...';
-
+ 
   const money = value => {
     const number = Number(value);
     return Number.isFinite(number)
       ? 'S$' + number.toFixed(2)
       : '—';
   };
-
+ 
   function addText(parent, text, tag = 'p') {
     const element = document.createElement(tag);
     element.textContent = text;
     parent.appendChild(element);
     return element;
   }
-
+ 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
@@ -308,30 +308,30 @@ if (!telegram?.initData) return;
         initData: tg.initData
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('API connection failed');
     }
-
+ 
     const result = await response.json();
-
+ 
     if (!result.success || !Array.isArray(result.invoices)) {
       throw new Error('Invoice lookup failed');
     }
-
+ 
     container.replaceChildren();
-
+ 
     if (result.invoices.length === 0) {
       container.textContent = 'You have no invoices yet.';
       return;
     }
-
+ 
     result.invoices.forEach(function(invoice) {
       const card = document.createElement('div');
       card.className = 'panel';
       card.style.marginBottom = '16px';
       card.style.padding = '22px';
-
+ 
       const title = addText(
         card,
         '👑 Invoice ' + String(invoice.invoiceId || ''),
@@ -339,32 +339,32 @@ if (!telegram?.initData) return;
       );
       title.style.marginTop = '0';
       title.style.color = '#d4af37';
-
+ 
       const order = addText(
         card,
         'Order: ' + String(invoice.orderId || '')
       );
       order.style.opacity = '0.8';
-
+ 
       const status = addText(
         card,
         'Payment Status: ' + String(invoice.paymentStatus || 'Unknown')
       );
       status.style.fontWeight = 'bold';
-
+ 
       const divider = document.createElement('hr');
       divider.style.border = '0';
       divider.style.borderTop = '1px solid #444';
       divider.style.margin = '20px 0';
       card.appendChild(divider);
-
+ 
       addText(card, ' Cards Purchased', 'h4');
-
+ 
       if (Array.isArray(invoice.cards) && invoice.cards.length > 0) {
         invoice.cards.forEach(function(item) {
           const row = document.createElement('div');
           row.style.marginBottom = '14px';
-
+ 
           const name = addText(
             row,
             String(item.cardName || 'Unnamed card') +
@@ -372,7 +372,7 @@ if (!telegram?.initData) return;
           );
           name.style.fontWeight = 'bold';
           name.style.marginBottom = '4px';
-
+ 
           const price = addText(
             row,
             'Unit: ' + money(item.unitPrice) +
@@ -380,48 +380,48 @@ if (!telegram?.initData) return;
           );
           price.style.fontSize = '14px';
           price.style.opacity = '0.75';
-
+ 
           card.appendChild(row);
         });
       } else {
         addText(card, 'No card details available.');
       }
-
+ 
       const totalDivider = divider.cloneNode();
       card.appendChild(totalDivider);
-
+ 
       const total = addText(
         card,
         'Total Amount: ' + money(invoice.totalAmount)
       );
       total.style.fontWeight = 'bold';
-
+ 
       const balance = addText(
         card,
         'Balance Due: ' + money(invoice.balanceDue)
       );
       balance.style.fontWeight = 'bold';
       balance.style.color = '#d4af37';
-
+ 
       container.appendChild(card);
     });
-
+ 
   } catch (error) {
     container.textContent =
       'Unable to load invoices. Please try again.';
   }
 }
-
-
+ 
+ 
   
 async function testKingzTCGTelegramLogin() {
   const telegram = window.Telegram?.WebApp;
-
+ 
   if (!telegram?.initData) {
     alert('⚠️ Please open KingzTCG inside Telegram.');
     return;
   }
-
+ 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
@@ -430,9 +430,9 @@ async function testKingzTCGTelegramLogin() {
       },
       body: telegram.initData
     });
-
+ 
     const result = await response.json();
-
+ 
     if (response.ok && result.success === true) {
       alert('👑 Telegram login verified successfully!');
     } else {
@@ -442,30 +442,30 @@ async function testKingzTCGTelegramLogin() {
     alert('⚠️ Cannot connect to the authentication API.');
   }
 }
-
+ 
   const tg = window.Telegram?.WebApp;
-
+ 
 if (tg) {
   tg.ready();
   tg.expand();
-
+ 
   window.addEventListener('load', function() {
     kingzTCGCheckAdminAccess();
   });
-
+ 
   console.log(
     'KingzTCG Telegram login available:',
     Boolean(tg.initData)
   );
 }
-
+ 
 async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Data) {
   const tg = window.Telegram?.WebApp;
-
+ 
   if (!tg || !tg.initData) {
     throw new Error('Please open KingzTCG inside Telegram.');
   }
-
+ 
   const response = await fetch(KINGZTCG_API_URL, {
     method: 'POST',
     headers: {
@@ -480,14 +480,14 @@ async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Da
       base64Data: base64Data
     })
   });
-
+ 
   if (!response.ok) {
     throw new Error('Receipt upload connection failed.');
   }
-
+ 
   return await response.json();
 }
-
+ 
 async function kingzTCGHandleReceiptUpload() {
   const invoiceSelect = document.getElementById(
     'kingztcg-receipt-invoice'
@@ -501,40 +501,40 @@ async function kingzTCGHandleReceiptUpload() {
   const status = document.getElementById(
     'kingztcg-receipt-status'
   );
-
+ 
   if (!invoiceSelect || !fileInput || !button || !status) {
     return;
   }
-
+ 
   if (button.dataset.uploading === 'true') {
     return;
   }
-
-
+ 
+ 
 const validationError = kingzTCGValidateReceiptSelection();
-
+ 
 if (validationError !== null) {
   status.textContent = validationError;
   return;
 }
-
+ 
   const invoiceId = invoiceSelect.value;
   const file = fileInput.files[0];
-
+ 
   button.dataset.uploading = 'true';
   button.disabled = true;
   status.textContent = 'Uploading receipt. Please wait...';
-
+ 
   try {
     const base64Data = await kingzTCGReadReceiptImage(file);
-
+ 
     const result = await kingzTCGSendReceiptUpload(
       invoiceId,
       file.name,
       file.type,
       base64Data
     );
-
+ 
     if (!result.success) {
       const messages = {
         receipt_already_submitted:
@@ -550,26 +550,26 @@ if (validationError !== null) {
         upload_busy:
           'Another upload is being processed. Please try again.'
       };
-
+ 
       throw new Error(
         messages[result.reason] ||
         'Receipt upload failed. Please try again.'
       );
     }
-
+ 
     status.textContent =
       'Receipt submitted successfully! Pending manual verification.';
-
+ 
     fileInput.value = '';
     invoiceSelect.value = '';
-
+ 
   } catch (error) {
     status.textContent =
       error.message || 'Receipt upload failed.';
  
 } finally {
   button.dataset.uploading = 'false';
-
+ 
   if (status.textContent.startsWith('Receipt submitted successfully!')) {
     button.disabled = true;
   } else {
@@ -577,23 +577,23 @@ if (validationError !== null) {
       kingzTCGValidateReceiptSelection() !== null;
   }
 }
-
+ 
 }
-
-
+ 
+ 
 async function kingzTCGLoadReceiptInvoices() {
   const tg = window.Telegram?.WebApp;
   const select = document.getElementById('kingztcg-receipt-invoice');
-
+ 
   if (!select) return;
-
+ 
   select.replaceChildren(new Option('Loading invoices...', ''));
-
+ 
   if (!tg?.initData) {
     select.replaceChildren(new Option('Please open inside Telegram', ''));
     return;
   }
-
+ 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
@@ -605,70 +605,70 @@ async function kingzTCGLoadReceiptInvoices() {
         initData: tg.initData
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('API connection failed');
     }
-
+ 
     const result = await response.json();
-
+ 
     if (!result.success || !Array.isArray(result.invoices)) {
       throw new Error('Unable to load invoices');
     }
-
+ 
     const unpaidInvoices = result.invoices.filter(function(invoice) {
       const balance = Number(invoice.balanceDue);
       return Number.isFinite(balance) && balance > 0;
     });
-
+ 
     select.replaceChildren(new Option('Select an unpaid invoice', ''));
-
+ 
     unpaidInvoices.forEach(function(invoice) {
       const option = new Option(
         String(invoice.invoiceId) +
           ' — S$' + Number(invoice.balanceDue).toFixed(2),
         String(invoice.invoiceId)
       );
-
+ 
       select.add(option);
     });
-
+ 
     if (unpaidInvoices.length === 0) {
       select.replaceChildren(new Option('No unpaid invoices', ''));
     }
-
+ 
   } catch (error) {
     select.replaceChildren(new Option('Unable to load invoices', ''));
   }
 }
-
+ 
   
 </script>
-
+ 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     * { box-sizing: border-box; }
-
+ 
     body {
       margin: 0;
       background: #101114;
       color: #ffffff;
       font-family: Arial, sans-serif;
     }
-
+ 
     .app {
       max-width: 520px;
       margin: auto;
       padding: 22px 18px 95px;
     }
-
+ 
     .header {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 28px;
     }
-
+ 
     .logo {
       width: 48px;
       height: 48px;
@@ -679,36 +679,36 @@ async function kingzTCGLoadReceiptInvoices() {
       color: #e9c66c;
       font-size: 27px;
     }
-
+ 
     h1 { font-size: 23px; margin: 0; }
     h2 { font-size: 21px; margin: 0 0 12px; }
-
+ 
     .subtitle {
       color: #a6aab2;
       font-size: 11px;
       letter-spacing: 1px;
       margin-top: 4px;
     }
-
+ 
     .welcome {
       background: #24262b;
       border-radius: 18px;
       padding: 22px;
       margin-bottom: 22px;
     }
-
+ 
     .welcome p, .muted {
       color: #a6aab2;
       font-size: 13px;
       line-height: 1.6;
     }
-
+ 
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
-
+ 
     .tile {
       background: #24262b;
       border: 1px solid #33363c;
@@ -719,24 +719,24 @@ async function kingzTCGLoadReceiptInvoices() {
       cursor: pointer;
       min-height: 125px;
     }
-
+ 
     .tile .emoji {
       font-size: 26px;
       margin-bottom: 13px;
     }
-
+ 
     .tile strong {
       display: block;
       font-size: 15px;
     }
-
+ 
     .tile span {
       display: block;
       color: #a6aab2;
       font-size: 11px;
       margin-top: 7px;
     }
-
+ 
     .profile {
       width: 100%;
       margin-top: 14px;
@@ -748,10 +748,10 @@ async function kingzTCGLoadReceiptInvoices() {
       text-align: left;
       cursor: pointer;
     }
-
+ 
     .page { display: none; }
     .page.active { display: block; }
-
+ 
     .back {
       border: 0;
       background: transparent;
@@ -761,14 +761,14 @@ async function kingzTCGLoadReceiptInvoices() {
       cursor: pointer;
       font-size: 14px;
     }
-
+ 
     .panel {
       background: #24262b;
       border-radius: 15px;
       padding: 20px;
       margin-top: 15px;
     }
-
+ 
     .nav {
       position: fixed;
       bottom: 0;
@@ -780,7 +780,7 @@ async function kingzTCGLoadReceiptInvoices() {
       justify-content: space-around;
       padding: 15px 5px 22px;
     }
-
+ 
     .nav button {
       background: none;
       border: none;
@@ -788,9 +788,22 @@ async function kingzTCGLoadReceiptInvoices() {
       font-size: 12px;
       cursor: pointer;
     }
-
+ 
     .nav button.selected { color: #e9c66c; }
-
+ 
+ 
+    /* Tibi-style three-choice collection selector, displayed above existing payment flow. */
+    .fulfilment-panel { padding: 18px 14px; }
+    .fulfilment-heading { margin: 0 0 14px; font-size: 13px; letter-spacing: 1px; color: #e9c66c; text-align: center; }
+    .fulfilment-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .fulfilment-choice { min-width: 0; padding: 16px 5px; background: #191a1e; color: #fff; border: 1px solid #44464b; border-radius: 14px; cursor: pointer; text-align: center; font: inherit; }
+    .fulfilment-choice[aria-pressed="true"] { border: 2px solid #d4af37; background: #2b2619; }
+    .fulfilment-choice .choice-icon { display: block; font-size: 23px; color: #e9c66c; margin-bottom: 8px; }
+    .fulfilment-choice strong { display: block; font-size: 13px; line-height: 1.3; }
+    .fulfilment-choice small { display: block; color: #a6aab2; font-size: 11px; line-height: 1.4; margin-top: 6px; }
+    .fulfilment-choice:focus-visible { outline: 2px solid #e9c66c; outline-offset: 3px; }
+    .fulfilment-note { color: #a6aab2; font-size: 12px; line-height: 1.5; margin: 14px 3px 0; }
+ 
     /* Customer profile form */
     .profile-field { display: block; margin-top: 16px; }
     .profile-field label { display: block; margin-bottom: 7px; color: #e9c66c; font-size: 13px; font-weight: bold; }
@@ -807,10 +820,10 @@ async function kingzTCGLoadReceiptInvoices() {
     .profile-message { margin-top: 14px; min-height: 20px; font-size: 13px; line-height: 1.5; }
   </style>
 </head>
-
+ 
 <body>
 <div class="app">
-
+ 
   <div class="header">
     <div class="logo">♛</div>
     <div>
@@ -818,51 +831,51 @@ async function kingzTCGLoadReceiptInvoices() {
       <div class="subtitle">COLLECT • CLAIM • CONQUER</div>
     </div>
   </div>
-
+ 
   <section id="home" class="page active">
     <div class="welcome">
       <p>WELCOME TO KINGZTCG</p>
       <h2>Your collection, your kingdom.</h2>
       <p>Manage your claims, payments and collections in one place.</p>
     </div>
-
+ 
     <div class="grid">
       <button class="tile" onclick="showPage('orders')">
         <div class="emoji">📦</div>
         <strong>My Orders</strong>
         <span>Claimed cards</span>
       </button>
-
+ 
       <button class="tile" onclick="showPage('invoices')">
         <div class="emoji">🧾</div>
         <strong>Invoices</strong>
         <span>Billing & balances</span>
       </button>
-
+ 
       <button class="tile" onclick="showPage('payment')">
         <div class="emoji">💳</div>
         <strong>Payment</strong>
         <span>PayNow & receipts</span>
       </button>
-
+ 
       <button class="tile" onclick="showPage('collection')">
         <div class="emoji">🚚</div>
         <strong>Collection</strong>
         <span>Mailing & holds</span>
       </button>
     </div>
-
+ 
     <button class="profile" onclick="showPage('profile')">
       👤 &nbsp; My Profile — Contact & Mailing Address →
     </button>
   </section>
-
+ 
   <section id="orders" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
     <h2>📦 My Orders</h2>
     <div class="panel muted">Your claimed cards will appear here.</div>
   </section>
-
+ 
   <section id="invoices" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
     <h2>🧾 My Invoices</h2>
@@ -870,15 +883,41 @@ async function kingzTCGLoadReceiptInvoices() {
 <div id="kingztcg-invoice-list" class="panel">
   <p class="muted">Tap the button above to load your invoices.</p>
 </div>
-
+ 
   </section>
-
+ 
  
 <section id="payment" class="page">
   <button class="back" onclick="showPage('home')">← Back</button>
-
+ 
   <h2>Payment</h2>
-
+ 
+  <!-- Collection choices are visual only until the authenticated request API is connected. -->
+  <div class="panel fulfilment-panel">
+    <h3 class="fulfilment-heading">COLLECTION OPTION</h3>
+    <div class="fulfilment-options" role="group" aria-label="Collection option">
+      <button type="button" class="fulfilment-choice" data-method="hold" aria-pressed="true" onclick="kingzTCGChooseCollection('hold')">
+        <span class="choice-icon" aria-hidden="true">▣</span>
+        <strong>Hold</strong>
+        <small>Keep with us</small>
+      </button>
+      <button type="button" class="fulfilment-choice" data-method="mail" aria-pressed="false" onclick="kingzTCGChooseCollection('mail')">
+        <span class="choice-icon" aria-hidden="true">✉</span>
+        <strong>Mail</strong>
+        <small>+S$3.50</small>
+      </button>
+      <button type="button" class="fulfilment-choice" data-method="self_collection" aria-pressed="false" onclick="kingzTCGChooseCollection('self_collection')">
+        <span class="choice-icon" aria-hidden="true">⌂</span>
+        <strong>Self-Collection</strong>
+        <small>Arrange pickup</small>
+      </button>
+    </div>
+    <p class="fulfilment-note" id="kingztcg-fulfilment-note" aria-live="polite">
+      Hold selected. This choice is not yet submitted to KingzTCG.
+    </p>
+  </div>
+ 
+ 
   <div class="panel">
     <h3>Outstanding Balance</h3>
     <p id="kingztcg-payment-balance"
@@ -887,15 +926,15 @@ async function kingzTCGLoadReceiptInvoices() {
     </p>
     <p class="muted">Your unpaid invoice balance will appear here.</p>
   </div>
-
+ 
  
 <div class="panel">
   <h3>PayNow QR Code</h3>
-
+ 
   <p class="muted">
     Scan the QR code below to make your payment.
   </p>
-
+ 
   <div style="text-align:center; margin-top:20px;">
     <img
       src="paynow-qr.JPG"
@@ -903,23 +942,23 @@ async function kingzTCGLoadReceiptInvoices() {
       style="width:100%; max-width:280px; height:auto; background:white; padding:12px; border-radius:12px; box-sizing:border-box;"
     >
   </div>
-
+ 
   <p class="muted" style="text-align:center; margin-top:15px;">
     Please verify the recipient before confirming payment.
   </p>
 </div>
-
-
+ 
+ 
   <div class="panel">
     <h3>Payment Receipt</h3>
     <p class="muted">
       Upload your payment screenshot after transferring.
     </p>
-
+ 
 <label for="kingztcg-receipt-invoice">
   Select invoice to pay
 </label>
-
+ 
 <select
   id="kingztcg-receipt-invoice"
   style="display:block; width:100%; padding:12px;
@@ -929,18 +968,18 @@ async function kingzTCGLoadReceiptInvoices() {
     Invoice selection coming soon
   </option>
 </select>
-
+ 
 <label for="kingztcg-receipt-file">
   Select your payment screenshot
 </label>
-
+ 
 <input
   type="file"
   id="kingztcg-receipt-file"
   accept="image/jpeg,image/png,image/webp"
   style="display:block; margin:12px 0; width:100%;"
 >
-
+ 
 <button
   type="button"
   id="kingztcg-upload-receipt"
@@ -948,7 +987,7 @@ async function kingzTCGLoadReceiptInvoices() {
 >
   Upload Receipt
 </button>
-
+ 
 <p
   id="kingztcg-receipt-status"
   class="muted"
@@ -956,9 +995,9 @@ async function kingzTCGLoadReceiptInvoices() {
 >
   Receipt upload is not enabled yet.
 </p>
-
+ 
   </div>
-
+ 
   <div class="panel">
     <p class="muted">
       All payments are verified manually.
@@ -966,14 +1005,14 @@ async function kingzTCGLoadReceiptInvoices() {
     </p>
   </div>
 </section>
-
-
+ 
+ 
   <section id="collection" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
     <h2>🚚 Collection</h2>
     <div class="panel muted">Mailing, self-collection and card holds will appear here.</div>
   </section>
-
+ 
   <section id="profile" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
     <h2>👤 My Profile</h2>
@@ -1006,35 +1045,35 @@ async function kingzTCGLoadReceiptInvoices() {
     </div>
     <p class="muted">Your profile is linked to your verified Telegram account. Your details are used for order contact and mailing.</p>
   </section>
-
+ 
 <section id="admin" class="page">
   <button class="back" onclick="showPage('home')">← Back</button>
-
+ 
   <h2>👑 KingzTCG Admin Dashboard</h2>
   <p class="muted">Manage your KingzTCG operations.</p>
-
+ 
 <div class="panel">
   <h3>💳 Pending Payments</h3>
   <p>Review uploaded receipts and payment status.</p>
-
+ 
   <div id="kingztcg-admin-pending-payments">
     Pending payments will appear here.
   </div>
 </div>
-
+ 
   <div class="panel">
     <h3>📦 Orders & Invoices</h3>
     <p>Manage customer orders and invoices.</p>
   </div>
-
+ 
   <div class="panel">
     <h3>🚚 Mailing & Collection</h3>
     <p>Track mailing requests and collections.</p>
   </div>
 </section>
-
+ 
 </div>
-
+ 
 <nav class="nav">
   <button id="nav-home" class="selected" onclick="showPage('home')">⌂ Home</button>
   <button id="nav-orders" onclick="showPage('orders')">📦 Orders</button>
@@ -1042,9 +1081,28 @@ async function kingzTCGLoadReceiptInvoices() {
   <button id="nav-profile" onclick="showPage('profile')">👤 Profile</button>
   <button id="nav-admin" onclick="showPage('admin')"style="display:none;">👑 Admin</button>
 </nav>
-
+ 
 <script>
-
+ 
+ 
+// Collection choice UI only. Saving requests and applying mailing fees require
+// an authenticated backend action; never alter balances on the client.
+function kingzTCGChooseCollection(method) {
+  const valid = ['hold', 'mail', 'self_collection'];
+  if (!valid.includes(method)) return;
+  document.querySelectorAll('.fulfilment-choice').forEach(function(button) {
+    button.setAttribute('aria-pressed', String(button.dataset.method === method));
+  });
+  const note = document.getElementById('kingztcg-fulfilment-note');
+  if (!note) return;
+  const messages = {
+    hold: 'Hold selected. This choice is not yet submitted to KingzTCG.',
+    mail: 'Mail selected. S$3.50 is not included in your displayed balance unless invoiced by admin. This choice is not yet submitted.',
+    self_collection: 'Self-Collection selected. This choice is not yet submitted to KingzTCG.'
+  };
+  note.textContent = messages[method];
+}
+ 
 // Customer Profile: requests are authenticated by Telegram initData on the server.
 function kingzTCGProfileStatus(message, success) {
   const status = document.getElementById('kingztcg-profile-status');
@@ -1052,13 +1110,13 @@ function kingzTCGProfileStatus(message, success) {
   status.textContent = message;
   status.style.color = success ? '#b7e0b5' : '#a6aab2';
 }
-
+ 
 async function kingzTCGProfileRequest(profileAction, profile) {
   const telegram = window.Telegram?.WebApp;
   if (!telegram?.initData) {
     throw new Error('Please open KingzTCG inside Telegram.');
   }
-
+ 
   const response = await fetch(KINGZTCG_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
@@ -1082,7 +1140,7 @@ async function kingzTCGProfileRequest(profileAction, profile) {
   }
   return result;
 }
-
+ 
 async function kingzTCGLoadCustomerProfile() {
   const form = document.getElementById('kingztcg-profile-form');
   const save = document.getElementById('kingztcg-profile-save');
@@ -1104,7 +1162,7 @@ async function kingzTCGLoadCustomerProfile() {
     kingzTCGProfileStatus(error.message || 'Unable to load profile.', false);
   }
 }
-
+ 
 function kingzTCGConnectProfileForm() {
   const form = document.getElementById('kingztcg-profile-form');
   const save = document.getElementById('kingztcg-profile-save');
@@ -1137,37 +1195,37 @@ function kingzTCGConnectProfileForm() {
     }
   });
 }
-
+ 
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(function(page) {
     page.classList.remove('active');
   });
-
+ 
   document.getElementById(pageId).classList.add('active');
-
+ 
   document.querySelectorAll('.nav button').forEach(function(button) {
     button.classList.remove('selected');
   });
-
+ 
   const activeButton = document.getElementById('nav-' + pageId);
-
+ 
   if (activeButton) {
     activeButton.classList.add('selected');
   }
-
+ 
   window.scrollTo(0, 0);
-
+ 
   if (pageId === 'profile') {
     kingzTCGConnectProfileForm();
     kingzTCGLoadCustomerProfile();
   }
-
+ 
   // Automatically load invoices when the customer opens My Invoices.
   if (pageId === 'invoices') {
     testKingzTCGMyInvoices();
   }
   
-
+ 
 if (pageId === 'payment') {
   loadKingzTCGPaymentBalance();
   kingzTCGLoadReceiptInvoices();
@@ -1177,25 +1235,25 @@ if (pageId === 'payment') {
 if (pageId === 'admin') {
   kingzTCGLoadPendingPayments();
 }
-
+ 
 }
-
+ 
 async function loadKingzTCGPaymentBalance() {
   const container = document.getElementById(
     'kingztcg-payment-balance'
   );
-
+ 
   if (!container) return;
-
+ 
   const tg = window.Telegram?.WebApp;
-
+ 
   if (!tg?.initData) {
     container.textContent = 'Open inside Telegram';
     return;
   }
-
+ 
   container.textContent = 'Loading balance...';
-
+ 
   try {
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
@@ -1207,125 +1265,125 @@ async function loadKingzTCGPaymentBalance() {
         initData: tg.initData
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('API request failed');
     }
-
+ 
     const result = await response.json();
-
+ 
     if (!result.success || !Array.isArray(result.invoices)) {
       throw new Error('Invalid invoice response');
     }
-
+ 
     const balance = result.invoices.reduce(function(total, invoice) {
       const amount = Number(invoice.balanceDue);
-
+ 
       if (!Number.isFinite(amount) || amount < 0) {
         throw new Error('Invalid balance amount');
       }
-
+ 
       return total + amount;
     }, 0);
-
+ 
     container.textContent = 'S$' + balance.toFixed(2);
-
+ 
   } catch (error) {
     container.textContent = 'Unable to load balance';
   }
 }
-
+ 
 function kingzTCGValidateReceiptSelection() {
   const invoiceSelect = document.getElementById(
     'kingztcg-receipt-invoice'
   );
-
+ 
   const fileInput = document.getElementById(
     'kingztcg-receipt-file'
   );
-
+ 
   if (!invoiceSelect || !fileInput) {
     return 'Receipt form not found.';
   }
-
+ 
   if (!invoiceSelect.value) {
     return 'Please select an unpaid invoice.';
   }
-
+ 
   const file = fileInput.files[0];
-
+ 
   if (!file) {
     return 'Please select your payment screenshot.';
   }
-
+ 
   const allowedTypes = [
     'image/jpeg',
     'image/png',
     'image/webp'
   ];
-
+ 
   if (!allowedTypes.includes(file.type)) {
     return 'Please select a JPG, PNG or WebP image.';
   }
-
+ 
   if (file.size === 0 || file.size > 5 * 1024 * 1024) {
     return 'Your screenshot must be under 5 MB.';
   }
-
+ 
   return null;
 }
-
+ 
 function kingzTCGReadReceiptImage(file) {
   return new Promise(function(resolve, reject) {
     const reader = new FileReader();
-
+ 
     reader.onload = function() {
       const result = reader.result;
-
+ 
       if (typeof result !== 'string') {
         reject(new Error('Unable to read screenshot.'));
         return;
       }
-
+ 
       const commaIndex = result.indexOf(',');
-
+ 
       if (commaIndex === -1) {
         reject(new Error('Invalid screenshot data.'));
         return;
       }
-
+ 
       resolve(result.slice(commaIndex + 1));
     };
-
+ 
     reader.onerror = function() {
       reject(new Error('Unable to read screenshot.'));
     };
-
+ 
     reader.readAsDataURL(file);
   });
 }
-
-
+ 
+ 
 function kingzTCGUpdateReceiptButton() {
   const button = document.getElementById(
     'kingztcg-upload-receipt'
   );
-
+ 
   const status = document.getElementById(
     'kingztcg-receipt-status'
   );
-
+ 
   if (!button || !status) return;
   if (button.dataset.uploading === 'true') {
   button.disabled = true;
   return;
 }
-
-
+ 
+ 
   const error = kingzTCGValidateReceiptSelection();
-
+ 
   button.disabled = true;
-
+ 
   if (error !== null) {
     status.textContent = error;
   } else {
@@ -1334,50 +1392,50 @@ function kingzTCGUpdateReceiptButton() {
       'Screenshot ready. Tap Upload Receipt to continue.';
   }
 }
-
+ 
 function kingzTCGConnectReceiptForm() {
   if (window.kingzTCGReceiptFormConnected) {
     return;
   }
-
+ 
   const invoiceSelect = document.getElementById(
     'kingztcg-receipt-invoice'
   );
-
+ 
   const fileInput = document.getElementById(
     'kingztcg-receipt-file'
   );
-
+ 
   const uploadButton = document.getElementById(
   'kingztcg-upload-receipt'
   );
-
+ 
   if (!invoiceSelect || !fileInput || !uploadButton) {
     return;
   }
-
+ 
   window.kingzTCGReceiptFormConnected = true;
-
+ 
   invoiceSelect.addEventListener(
     'change',
     kingzTCGUpdateReceiptButton
   );
-
+ 
   fileInput.addEventListener(
     'change',
     kingzTCGUpdateReceiptButton
   );
-
+ 
   uploadButton.addEventListener('click', function() {
     kingzTCGHandleReceiptUpload();
   });
-
+ 
   kingzTCGUpdateReceiptButton();
 }
-
+ 
   
 </script>
-
-
+ 
+ 
 </body>
 </html>
