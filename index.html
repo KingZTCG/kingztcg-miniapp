@@ -37,6 +37,14 @@ async function kingzTCGCheckAdminAccess() {
     }
 
     const result = await response.json();
+    alert(
+  'Admin verification: ' +
+  JSON.stringify({
+    success: result.success,
+    isAdmin: result.isAdmin,
+    reason: result.reason || 'none'
+  })
+);
 
     if (result.success === true && result.isAdmin === true) {
       adminButton.style.display = '';
