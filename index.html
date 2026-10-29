@@ -881,9 +881,12 @@ if (pageId === 'payment') {
   kingzTCGLoadReceiptInvoices();
   kingzTCGConnectReceiptForm();
 }
-
+  
+if (pageId === 'admin') {
+  kingzTCGLoadPendingPayments();
 }
 
+}
 
 async function loadKingzTCGPaymentBalance() {
   const container = document.getElementById(
