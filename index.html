@@ -71,11 +71,25 @@ async function kingzTCGLoadPendingPayments() {
           ? 'Date unavailable'
           : date.toLocaleString());
 
-      card.appendChild(invoice);
-      card.appendChild(status);
-      card.appendChild(submitted);
+    
+card.appendChild(invoice);
+card.appendChild(status);
+card.appendChild(submitted);
 
-      container.appendChild(card);
+// Show the receipt link only when available.
+if (payment.receiptUrl) {
+  const receiptButton = document.createElement('a');
+
+  receiptButton.textContent = '📷 View Receipt';
+  receiptButton.href = payment.receiptUrl;
+  receiptButton.target = '_blank';
+  receiptButton.rel = 'noopener noreferrer';
+
+  card.appendChild(receiptButton);
+}
+
+container.appendChild(card);
+
     });
 
   } catch (error) {
