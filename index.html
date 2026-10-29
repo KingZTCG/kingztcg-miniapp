@@ -164,6 +164,70 @@ async function kingzTCGLoadPendingPayments() {
     container.textContent =
       'Unable to load pending payments.';
   }
+
+async function kingzTCGSubmitAdminPaymentAction(
+  receiptId,
+  paymentAction
+) {
+  const telegram = window.Telegram?.WebApp;
+
+  if (!telegram?.initData) {
+    window.alert('Please open KingzTCG through Telegram.');
+    return;
+  }
+
+  if (
+    !receiptId ||
+    !['verify_payment', 'reject_payment'].includes(paymentAction)
+  ) {
+    window.alert('Invalid payment request.');
+    return;
+  }
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'admin_payment_action',
+        initData: telegram.initData,
+        receiptId: String(receiptId),
+        paymentAction: paymentAction
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API request failed');
+    }
+
+    const result = await response.json();
+
+    if (result.success === true) {
+      window.alert(
+        paymentAction === 'verify_payment'
+          ? 'Payment verified successfully!'
+          : 'Payment receipt rejected.'
+      );
+
+      await kingzTCGLoadPendingPayments();
+    } else {
+      window.alert(
+        'Payment action unsuccessful: ' +
+        String(result.reason || 'unknown_error')
+      );
+    }
+
+  } catch (error) {
+    console.error('Admin payment action error:', error);
+
+    window.alert(
+      'Unable to complete payment action. ' +
+      'Please check the payment records before trying again.'
+    );
+  }
+}
 }
  
 async function kingzTCGCheckAdminAccess() {
