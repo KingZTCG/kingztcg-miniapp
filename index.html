@@ -100,9 +100,24 @@ async function kingzTCGLoadPendingPayments() {
 
       const verifyButton = document.createElement('button');
       verifyButton.type = 'button';
-      verifyButton.textContent = '✅ Verify Payment';
-      verifyButton.disabled = true;
-      verifyButton.title = 'Secure verification coming next';
+      verifyButton.textContent = '✅ Verify Payment';    
+      verifyButton.disabled = false;
+      verifyButton.title = 'Verify payment after checking your bank';
+      verifyButton.onclick = async function() {
+      const confirmed = window.confirm(
+    'Have you checked your bank account and confirmed ' +
+    'that this payment was received?\n\n' +
+    'Select OK to continue with payment verification.'
+  );
+
+  if (!confirmed) return;
+
+  await kingzTCGSubmitAdminPaymentAction(
+    payment.receiptId,
+    'verify_payment'
+  );
+};
+
 
       const rejectButton = document.createElement('button');
       rejectButton.type = 'button';
