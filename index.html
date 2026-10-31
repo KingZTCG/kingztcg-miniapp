@@ -1164,6 +1164,8 @@ async function kingzTCGChooseCollection(method) {
         String(button.dataset.method === method)
       );
     });
+    // Refresh Payment balance after a successful collection update.
+    await loadKingzTCGPaymentBalance();
     // Refresh My Invoices after a successful collection update.
     // The API has already confirmed that the request was saved.
     if (typeof testKingzTCGMyInvoices === 'function') {
