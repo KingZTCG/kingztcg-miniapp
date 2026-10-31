@@ -1164,7 +1164,18 @@ async function kingzTCGChooseCollection(method) {
         String(button.dataset.method === method)
       );
     });
-
+    // Refresh My Invoices after a successful collection update.
+    // The API has already confirmed that the request was saved.
+    if (typeof testKingzTCGMyInvoices === 'function') {
+      try {
+        await testKingzTCGMyInvoices();
+      } catch (refreshError) {
+        console.error(
+          'Invoice refresh failed:',
+          refreshError
+        );
+      }
+    }
     if (note) {
       if (method === 'mail') {
         note.textContent =
