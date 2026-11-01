@@ -1147,8 +1147,6 @@ async function kingzTCGLoadReceiptInvoices() {
  
 // Collection choice UI only. Saving requests and applying mailing fees require
 // an authenticated backend action; never alter balances on the client.
-
-async function kingzTCGChooseCollection(method) {
   
 async function kingzTCGLoadHeldCards() {
   const container = document.getElementById('kingztcg-held-cards');
@@ -1222,6 +1220,7 @@ async function kingzTCGLoadHeldCards() {
   }
 }
 
+async function kingzTCGChooseCollection(method) {
   const valid = ['hold', 'mail', 'self_collection'];
   if (!valid.includes(method)) return;
 
