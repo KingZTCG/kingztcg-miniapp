@@ -1040,11 +1040,38 @@ async function kingzTCGLoadReceiptInvoices() {
 </section>
  
  
-  <section id="collection" class="page">
-    <button class="back" onclick="showPage('home')">← Back</button>
-    <h2>🚚 Collection</h2>
-    <div class="panel muted">Mailing, self-collection and card holds will appear here.</div>
-  </section>
+  
+<section id="collection" class="page">
+  <button class="back" onclick="showPage('home')">← Back</button>
+
+  <h2>👑 Collection</h2>
+  <p class="muted">
+    Manage your paid cards held with KingzTCG.
+  </p>
+
+  <div class="panel">
+    <h3>My Held Cards</h3>
+    <p class="muted">
+      Only fully paid cards selected for Card Hold
+      will appear here.
+    </p>
+
+    <button
+      type="button"
+      onclick="kingzTCGLoadHeldCards()">
+      Refresh My Held Cards
+    </button>
+
+    <div
+      id="kingztcg-held-cards"
+      aria-live="polite">
+      <p class="muted">
+        Your held cards have not been loaded yet.
+      </p>
+    </div>
+  </div>
+</section>
+
  
   <section id="profile" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
