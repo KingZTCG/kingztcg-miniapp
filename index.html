@@ -5,6 +5,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js">
 </script>
   
+  
  
 <script>
  const KINGZTCG_API_URL = 'https://kingztcg-miniapp-api.jnice92.workers.dev';
@@ -351,6 +352,38 @@ if (!telegram?.initData) return;
         'Payment Status: ' + String(invoice.paymentStatus || 'Unknown')
       );
       status.style.fontWeight = 'bold';
+      
+const receiptStatus = String(invoice.receiptStatus || '').trim();
+
+if (receiptStatus) {
+  const receiptLine = addText(
+    card,
+    'Receipt Status: ' + receiptStatus
+  );
+
+  receiptLine.style.fontWeight = 'bold';
+
+  if (receiptStatus === 'Rejected') {
+    receiptLine.style.color = '#ff7777';
+
+    const notice = addText(
+      card,
+      'Your previous payment receipt could not be verified. ' +
+      'Please check your payment details or contact our admin.'
+    );
+
+    notice.style.fontSize = '13px';
+    notice.style.opacity = '0.85';
+  } else if (
+    receiptStatus === 'Pending Verification' ||
+    receiptStatus === 'Pending'
+  ) {
+    receiptLine.style.color = '#d4af37';
+  } else if (receiptStatus === 'Verified') {
+    receiptLine.style.color = '#75d69b';
+  }
+}
+
  
       const divider = document.createElement('hr');
       divider.style.border = '0';
