@@ -1149,6 +1149,79 @@ async function kingzTCGLoadReceiptInvoices() {
 // an authenticated backend action; never alter balances on the client.
 
 async function kingzTCGChooseCollection(method) {
+  
+async function kingzTCGLoadHeldCards() {
+  const container = document.getElementById('kingztcg-held-cards');
+  if (!container) return;
+
+  container.textContent = 'Loading your held cards...';
+
+  try {
+    const initData = window.Telegram?.WebApp?.initData;
+
+    if (!initData) {
+      throw new Error('Please open KingzTCG inside Telegram.');
+    }
+
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'held_cards',
+        initData: initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to connect to KingzTCG.');
+    }
+
+    const result = await response.json();
+
+    if (result.success !== true) {
+      throw new Error(
+        result.reason === 'authentication_expired'
+          ? 'Your Telegram session has expired. Please reopen the Mini App.'
+          : 'Unable to load your held cards.'
+      );
+    }
+
+    container.replaceChildren();
+
+    if (!Array.isArray(result.cards) || result.cards.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'muted';
+      empty.textContent = 'No paid cards currently on hold.';
+      container.appendChild(empty);
+      return;
+    }
+
+    result.cards.forEach(function(card) {
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+
+      const name = document.createElement('strong');
+      name.textContent = String(card.cardName || 'Unnamed card');
+
+      const details = document.createElement('p');
+      details.className = 'muted';
+      details.textContent =
+        'Quantity: ' + String(card.quantity || '1') +
+        ' | Invoice: ' + String(card.invoiceId || '');
+
+      panel.appendChild(name);
+      panel.appendChild(details);
+      container.appendChild(panel);
+    });
+
+  } catch (error) {
+    container.textContent =
+      error.message || 'Unable to load your held cards.';
+  }
+}
+
   const valid = ['hold', 'mail', 'self_collection'];
   if (!valid.includes(method)) return;
 
