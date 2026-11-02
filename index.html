@@ -1195,23 +1195,75 @@ async function kingzTCGLoadHeldCards() {
       return;
     }
 
-    result.cards.forEach(function(card) {
-      const panel = document.createElement('div');
-      panel.className = 'panel';
+ 
+const heldCards = result.cards;
 
-      const name = document.createElement('strong');
-      name.textContent = String(card.cardName || 'Unnamed card');
+const totalCards = heldCards.reduce(function(sum, card) {
+  return sum + (Number(card.quantity) || 0);
+}, 0);
 
-      const details = document.createElement('p');
-      details.className = 'muted';
-      details.textContent =
-        'Quantity: ' + String(card.quantity || '1') +
-        ' | Invoice: ' + String(card.invoiceId || '');
+const totalValue = heldCards.reduce(function(sum, card) {
+  return sum + (Number(card.subtotal) || 0);
+}, 0);
 
-      panel.appendChild(name);
-      panel.appendChild(details);
-      container.appendChild(panel);
-    });
+const summary = document.createElement('div');
+summary.style.cssText =
+  'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;';
+
+function makeSummary(label, value) {
+  const box = document.createElement('div');
+  box.style.cssText =
+    'background:#1d1d23;border:1px solid #52452a;' +
+    'border-radius:12px;padding:16px;';
+
+  const title = document.createElement('div');
+  title.textContent = label;
+  title.style.cssText = 'color:#aaa;font-size:12px;';
+
+  const amount = document.createElement('div');
+  amount.textContent = value;
+  amount.style.cssText =
+    'color:#d8b86a;font-size:22px;font-weight:bold;margin-top:8px;';
+
+  box.appendChild(title);
+  box.appendChild(amount);
+  return box;
+}
+
+summary.appendChild(makeSummary('Total Cards', String(totalCards)));
+summary.appendChild(
+  makeSummary('Total Value', 'S$' + totalValue.toFixed(2))
+);
+container.appendChild(summary);
+
+heldCards.forEach(function(card) {
+  const panel = document.createElement('div');
+  panel.style.cssText =
+    'background:#1d1d23;border:1px solid #52452a;' +
+    'border-radius:12px;padding:16px;margin-bottom:12px;';
+
+  const name = document.createElement('strong');
+  name.textContent = String(card.cardName || 'Unnamed card');
+  name.style.cssText = 'color:#f1d58a;font-size:16px;';
+
+  const status = document.createElement('div');
+  status.textContent = 'On Hold';
+  status.style.cssText =
+    'color:#d8b86a;font-size:12px;margin-top:6px;';
+
+  const details = document.createElement('p');
+  details.style.cssText =
+    'color:#aaa;font-size:13px;line-height:1.7;';
+  details.textContent =
+    'Quantity: ' + String(card.quantity || '1') +
+    ' | Value: S$' + (Number(card.subtotal) || 0).toFixed(2) +
+    ' | Invoice: ' + String(card.invoiceId || '');
+
+  panel.appendChild(name);
+  panel.appendChild(status);
+  panel.appendChild(details);
+  container.appendChild(panel);
+});
 
   } catch (error) {
     container.textContent =
