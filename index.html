@@ -554,6 +554,41 @@ async function kingzTCGSendMailingFeeReceipt(
   return await response.json();
 }
 
+
+function kingzTCGMailingReceiptFileChanged() {
+  const fileInput = document.getElementById(
+    'kingztcg-mailing-receipt-file'
+  );
+  const button = document.getElementById(
+    'kingztcg-mailing-upload'
+  );
+  const status = document.getElementById(
+    'kingztcg-mailing-upload-status'
+  );
+
+  if (!fileInput || !button || !status) return;
+
+  const file = fileInput.files[0];
+
+  button.disabled = true;
+  status.textContent = '';
+
+  if (!file) return;
+
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    status.textContent = 'Please select a JPG, PNG or WebP image.';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    status.textContent = 'Image must be 5 MB or smaller.';
+    return;
+  }
+
+  button.disabled = false;
+  status.textContent = 'Screenshot selected. Ready to upload.';
+}
+
  
 async function kingzTCGHandleReceiptUpload() {
   const invoiceSelect = document.getElementById(
@@ -1156,7 +1191,9 @@ async function kingzTCGLoadReceiptInvoices() {
 
   <label for="kingztcg-mailing-receipt-file"> Payment screenshot
   </label>
-  <input type="file" id="kingztcg-mailing-receipt-file" accept="image/jpeg,image/png,image/webp" >
+ 
+<input type="file"id="kingztcg-mailing-receipt-file"accept="image/jpeg,image/png,image/webp"onchange="kingzTCGMailingReceiptFileChanged()">
+
   <button type="button" id="kingztcg-mailing-upload" class="profile-save" disabled >
     Upload Mailing Payment Screenshot
   </button>
