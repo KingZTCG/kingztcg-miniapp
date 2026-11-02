@@ -519,6 +519,41 @@ async function kingzTCGSendReceiptUpload(invoiceId, fileName, mimeType, base64Da
  
   return await response.json();
 }
+
+async function kingzTCGSendMailingFeeReceipt(
+  shipmentId,
+  fileName,
+  mimeType,
+  base64Data
+) {
+  const tg = window.Telegram?.WebApp;
+
+  if (!tg || !tg.initData) {
+    throw new Error('Please open KingzTCG inside Telegram.');
+  }
+
+  const response = await fetch(KINGZTCG_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=UTF-8'
+    },
+    body: JSON.stringify({
+      action: 'submit_mailing_fee_receipt',
+      initData: tg.initData,
+      shipmentId: shipmentId,
+      fileName: fileName,
+      mimeType: mimeType,
+      base64Data: base64Data
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Mailing payment upload connection failed.');
+  }
+
+  return await response.json();
+}
+
  
 async function kingzTCGHandleReceiptUpload() {
   const invoiceSelect = document.getElementById(
