@@ -244,6 +244,92 @@ console.log('KingzTCG mailing API response:', result);
   }
 }
 
+async function kingzTCGLoadAdminMailingFeeReceipts() {
+  const container = document.getElementById(
+    'kingztcg-admin-mailing-payments'
+  );
+
+  const telegram = window.Telegram?.WebApp;
+
+  if (!container || !telegram?.initData) return;
+
+  container.textContent = 'Loading mailing fee receipts...';
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'admin_mailing_fee_receipts',
+        initData: telegram.initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Mailing fee receipts connection failed.');
+    }
+
+    const result = await response.json();
+
+    if (
+      result.success !== true ||
+      !Array.isArray(result.receipts)
+    ) {
+      throw new Error('Unable to retrieve mailing fee receipts.');
+    }
+
+    container.replaceChildren();
+
+    if (result.receipts.length === 0) {
+      container.textContent = 'No mailing fee receipts found.';
+      return;
+    }
+
+    result.receipts.forEach(function(receipt) {
+      const card = document.createElement('div');
+      card.className = 'panel';
+      card.style.marginBottom = '12px';
+
+      const heading = document.createElement('h4');
+      heading.textContent =
+        'Receipt: ' + String(receipt.receiptId || '');
+
+      const shipment = document.createElement('p');
+      shipment.textContent =
+        'Shipment: ' + String(receipt.shipmentId || '');
+
+      const amount = document.createElement('p');
+      amount.textContent =
+        'Amount: S$' + String(receipt.amount || '0');
+
+      const status = document.createElement('p');
+      status.textContent =
+        'Payment Status: ' +
+        String(receipt.paymentStatus || 'Unknown');
+
+      const submitted = document.createElement('p');
+      submitted.textContent =
+        'Submitted: ' +
+        String(receipt.submittedAt || 'Unknown');
+
+      card.appendChild(heading);
+      card.appendChild(shipment);
+      card.appendChild(amount);
+      card.appendChild(status);
+      card.appendChild(submitted);
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error('Mailing fee receipts error:', error);
+    container.textContent =
+      'Unable to load mailing fee receipts.';
+  }
+}
+
 async function kingzTCGSubmitAdminPaymentAction(
   receiptId,
   paymentAction
@@ -2328,9 +2414,8 @@ if (pageId === 'payment') {
 if (pageId === 'admin') {
   kingzTCGLoadPendingPayments();
   kingzTCGLoadAdminMailingRequests();
+  kingzTCGLoadAdminMailingFeeReceipts();
 }
-
- 
 }
  
 async function loadKingzTCGPaymentBalance() {
