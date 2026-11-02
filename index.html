@@ -1133,6 +1133,26 @@ async function kingzTCGLoadReceiptInvoices() {
       <div id="kingztcg-combined-shipment-id" class="combined-shipment-id"></div>
       <button type="button" class="combined-secondary" onclick="kingzTCGCopyCombinedShipmentId()">Copy Shipment ID</button>
     </div>
+    
+<div id="kingztcg-mailing-payment" class="combined-result" hidden>
+  <h3>Mailing Fee Payment</h3>
+  <p>Tracked mailing fee: <strong>S$3.50</strong></p>
+  <p class="muted"> Pay using the KingzTCG PayNow QR code.Upload your bank transfer screenshot below.</p>
+ <div id="kingztcg-mailing-paynow-qr"></div>
+  <label for="kingztcg-mailing-receipt-file"> Payment screenshot
+  </label>
+  <input type="file" id="kingztcg-mailing-receipt-file" accept="image/jpeg,image/png,image/webp" >
+  <button type="button" id="kingztcg-mailing-upload" class="profile-save" disabled >
+    Upload Mailing Payment Screenshot
+  </button>
+
+  <p id="kingztcg-mailing-upload-status" class="profile-message muted" role="status" aria-live="polite"
+  ></p>
+
+  <p class="muted"> Payment remains pending until manually verified by KingzTCG admin.
+  </p>
+</div>
+
   </div>
 </section>
  
