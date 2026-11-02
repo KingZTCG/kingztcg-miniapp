@@ -1896,6 +1896,14 @@ async function kingzTCGLoadCustomerMailingHistory() {
         'Mailing Fee: S$' +
         (Number(shipment.mailingFee) || 0).toFixed(2);
 
+      const paymentStatus = document.createElement('p');
+      const receiptStatus = String(
+        shipment.paymentStatus || 'Not Submitted'
+      ).trim();
+
+      paymentStatus.textContent =
+        'Mailing Payment: ' + receiptStatus;
+
       const tracking = document.createElement('p');
       tracking.textContent =
         'Tracking Number: ' +
@@ -1906,7 +1914,156 @@ async function kingzTCGLoadCustomerMailingHistory() {
       panel.appendChild(date);
       panel.appendChild(invoices);
       panel.appendChild(fee);
+      panel.appendChild(paymentStatus);
       panel.appendChild(tracking);
+
+      const paymentSection = document.createElement('div');
+      paymentSection.style.marginTop = '20px';
+
+      const paymentHeading = document.createElement('h4');
+      paymentHeading.textContent = 'Mailing Fee Payment';
+
+      const paymentInfo = document.createElement('p');
+      paymentInfo.textContent =
+        'Pay S$' +
+        (Number(shipment.mailingFee) || 0).toFixed(2) +
+        ' using PayNow.';
+
+      const qrImage = document.createElement('img');
+      qrImage.src = 'paynow-qr.JPG';
+      qrImage.alt = 'KingzTCG PayNow QR Code';
+      qrImage.style.width = '200px';
+      qrImage.style.maxWidth = '100%';
+      qrImage.style.display = 'block';
+      qrImage.style.margin = '12px 0';
+
+      paymentSection.appendChild(paymentHeading);
+      paymentSection.appendChild(paymentInfo);
+      paymentSection.appendChild(qrImage);
+
+      const receiptLabel = document.createElement('p');
+      receiptLabel.textContent = 'Upload your PayNow payment screenshot:';
+
+      const receiptInput = document.createElement('input');
+      receiptInput.type = 'file';
+      receiptInput.accept = 'image/jpeg,image/png,image/webp';
+
+      const uploadButton = document.createElement('button');
+      uploadButton.type = 'button';
+      uploadButton.textContent = 'Upload Mailing Payment Screenshot';
+      uploadButton.disabled = true;
+
+      const uploadStatus = document.createElement('p');
+      uploadStatus.className = 'muted';
+      uploadStatus.setAttribute('aria-live', 'polite');
+
+ const canUploadReceipt =
+  receiptStatus.toLowerCase() === 'not submitted' ||
+  receiptStatus.toLowerCase() === 'rejected';
+      
+      receiptInput.addEventListener('change', function() {
+        uploadButton.disabled =
+          !canUploadReceipt ||
+          !receiptInput.files.length;
+      });
+
+      
+      uploadButton.addEventListener('click', async function() {
+        if (uploadButton.disabled) return;
+
+        const shipmentId = String(shipment.shipmentId || '').trim();
+        const file = receiptInput.files[0];
+
+        if (!shipmentId || !file) {
+          uploadStatus.textContent =
+            'Please select a screenshot for this shipment.';
+          return;
+        }
+
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
+            file.size > 5 * 1024 * 1024) {
+          uploadStatus.textContent =
+            'Please select a JPG, PNG or WebP image under 5 MB.';
+          return;
+        }
+
+        uploadButton.disabled = true;
+        receiptInput.disabled = true;
+        uploadStatus.textContent = 'Uploading payment screenshot...';
+
+        try {
+          const base64Data = await kingzTCGReadReceiptImage(file);
+
+          const result = await kingzTCGSendMailingFeeReceipt(
+            shipmentId,
+            file.name,
+            file.type,
+            base64Data
+          );
+
+          if (result.success !== true) {
+      
+if (result.reason === 'receipt_already_submitted') {
+  uploadStatus.textContent =
+    'A payment screenshot is already recorded for this shipment. Please refresh Mailing History to check its status.';
+
+  receiptInput.value = '';
+  receiptInput.disabled = true;
+  uploadButton.disabled = true;
+  return;
+}
+
+
+            throw new Error(
+              result.reason === 'shipment_not_found'
+                ? 'Shipment not found or does not belong to your account.'
+                : 'Unable to upload screenshot. Please try again.'
+            );
+          }
+
+    
+          uploadStatus.textContent =
+            'Screenshot submitted! Pending manual verification.';
+
+          receiptInput.value = '';
+          receiptInput.disabled = true;
+          uploadButton.disabled = true;
+
+  
+        } catch (error) {
+          uploadStatus.textContent =
+            error.message || 'Payment screenshot upload failed.';
+
+          receiptInput.disabled = !canUploadReceipt;
+          uploadButton.disabled =
+            !canUploadReceipt || !receiptInput.files.length;
+        }
+
+      });
+
+
+      // Only allow uploads when no receipt exists
+      // or the latest receipt was rejected.
+      
+
+      if (!canUploadReceipt) {
+        receiptInput.disabled = true;
+        uploadButton.disabled = true;
+
+        uploadStatus.textContent =
+          receiptStatus.toLowerCase() === 'pending'
+            ? 'Payment screenshot received. Awaiting admin verification.'
+            : receiptStatus.toLowerCase() === 'verified'
+              ? 'Mailing payment verified.'
+              : 'Payment upload unavailable for this shipment.';
+      }
+
+      paymentSection.appendChild(receiptLabel);
+      paymentSection.appendChild(receiptInput);
+      paymentSection.appendChild(uploadButton);
+      paymentSection.appendChild(uploadStatus);
+
+      panel.appendChild(paymentSection);
 
       container.appendChild(panel);
     });
