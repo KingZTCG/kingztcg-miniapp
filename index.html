@@ -589,6 +589,100 @@ function kingzTCGMailingReceiptFileChanged() {
   status.textContent = 'Screenshot selected. Ready to upload.';
 }
 
+
+async function kingzTCGHandleMailingFeeUpload() {
+  const shipmentId = document.getElementById(
+    'kingztcg-combined-shipment-id'
+  )?.textContent?.trim();
+
+  const fileInput = document.getElementById(
+    'kingztcg-mailing-receipt-file'
+  );
+
+  const button = document.getElementById(
+    'kingztcg-mailing-upload'
+  );
+
+  const status = document.getElementById(
+    'kingztcg-mailing-upload-status'
+  );
+
+  if (!fileInput || !button || !status) return;
+  if (button.dataset.uploading === 'true') return;
+
+  const file = fileInput.files[0];
+
+  if (!shipmentId) {
+    status.textContent = 'Shipment ID not found.';
+    return;
+  }
+
+  if (!file) {
+    status.textContent = 'Please select a payment screenshot.';
+    return;
+  }
+
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
+      file.size > 5 * 1024 * 1024) {
+    status.textContent = 'Please select a JPG, PNG or WebP image under 5 MB.';
+    return;
+  }
+
+  button.dataset.uploading = 'true';
+  button.disabled = true;
+  status.textContent = 'Uploading mailing payment screenshot...';
+
+  try {
+    const base64Data = await kingzTCGReadReceiptImage(file);
+
+    const result = await kingzTCGSendMailingFeeReceipt(
+      shipmentId,
+      file.name,
+      file.type,
+      base64Data
+    );
+
+    if (result.success !== true) {
+      const messages = {
+        receipt_already_submitted:
+          'A mailing payment receipt has already been submitted.',
+        shipment_not_found:
+          'Shipment not found or does not belong to your account.',
+        invalid_shipment_id:
+          'Invalid Shipment ID.',
+        upload_busy:
+          'Another upload is processing. Please try again.',
+        expired_authentication:
+          'Telegram session expired. Please reopen the Mini App.'
+      };
+
+      throw new Error(
+        messages[result.reason] ||
+        'Mailing payment upload failed. Please try again.'
+      );
+    }
+
+    status.textContent =
+      'Mailing payment screenshot submitted! Pending manual verification.';
+
+    fileInput.value = '';
+    button.dataset.submitted = 'true';
+
+  } catch (error) {
+    status.textContent =
+      error.message || 'Mailing payment upload failed.';
+
+  } finally {
+    button.dataset.uploading = 'false';
+
+    if (button.dataset.submitted === 'true') {
+      button.disabled = true;
+    } else {
+      kingzTCGMailingReceiptFileChanged();
+    }
+  }
+}
+
  
 async function kingzTCGHandleReceiptUpload() {
   const invoiceSelect = document.getElementById(
@@ -1194,9 +1288,16 @@ async function kingzTCGLoadReceiptInvoices() {
  
 <input type="file"id="kingztcg-mailing-receipt-file"accept="image/jpeg,image/png,image/webp"onchange="kingzTCGMailingReceiptFileChanged()">
 
-  <button type="button" id="kingztcg-mailing-upload" class="profile-save" disabled >
-    Upload Mailing Payment Screenshot
-  </button>
+<button
+  type="button"
+  id="kingztcg-mailing-upload"
+  class="profile-save"
+  onclick="kingzTCGHandleMailingFeeUpload()"
+  disabled
+>
+  Upload Mailing Payment Screenshot
+</button>
+
 
   <p id="kingztcg-mailing-upload-status" class="profile-message muted" role="status" aria-live="polite"
   ></p>
