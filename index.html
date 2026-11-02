@@ -353,24 +353,24 @@ if (!telegram?.initData) return;
       status.style.fontWeight = 'bold';
       
 const receiptStatus = String(invoice.receiptStatus || '').trim();
-
+ 
 if (receiptStatus) {
   const receiptLine = addText(
     card,
     'Receipt Status: ' + receiptStatus
   );
-
+ 
   receiptLine.style.fontWeight = 'bold';
-
+ 
   if (receiptStatus === 'Rejected') {
     receiptLine.style.color = '#ff7777';
-
+ 
     const notice = addText(
       card,
       'Your previous payment receipt could not be verified. ' +
       'Please check your payment details or contact our admin.'
     );
-
+ 
     notice.style.fontSize = '13px';
     notice.style.opacity = '0.85';
   } else if (
@@ -382,7 +382,7 @@ if (receiptStatus) {
     receiptLine.style.color = '#75d69b';
   }
 }
-
+ 
  
       const divider = document.createElement('hr');
       divider.style.border = '0';
@@ -850,6 +850,13 @@ async function kingzTCGLoadReceiptInvoices() {
       color: #101114; border: 0; border-radius: 11px; font-weight: bold; font-size: 15px; cursor: pointer; }
     .profile-save:disabled { opacity: .45; cursor: not-allowed; }
     .profile-message { margin-top: 14px; min-height: 20px; font-size: 13px; line-height: 1.5; }
+    .combined-preview { color:#c4c5c8; font-size:13px; line-height:1.7; white-space:pre-line; overflow-wrap:anywhere; padding:14px; background:#191a1e; border:1px solid #45403a; border-radius:12px; margin:14px 0; }
+    .combined-fee { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 2px; border-bottom:1px solid #45403a; color:#c4c5c8; font-size:14px; }
+    .combined-fee strong { color:#e9c66c; font-size:20px; }
+    .combined-secondary { width:100%; margin-top:12px; padding:12px; background:#1b1c20; color:#e9c66c; border:1px solid #8b753e; border-radius:10px; font-weight:bold; cursor:pointer; }
+    .combined-secondary:disabled { opacity:.45; cursor:not-allowed; }
+    .combined-result { margin-top:16px; border:1px solid #8b753e; padding:14px; border-radius:12px; color:#e9c66c; }
+    .combined-shipment-id { margin-top:9px; overflow-wrap:anywhere; font-size:14px; color:#fff; }
   </style>
 </head>
  
@@ -1042,25 +1049,25 @@ async function kingzTCGLoadReceiptInvoices() {
   
 <section id="collection" class="page">
   <button class="back" onclick="showPage('home')">← Back</button>
-
+ 
   <h2>👑 Collection</h2>
   <p class="muted">
     Manage your paid cards held with KingzTCG.
   </p>
-
+ 
   <div class="panel">
     <h3>My Held Cards</h3>
     <p class="muted">
       Only fully paid cards selected for Card Hold
       will appear here.
     </p>
-
+ 
     <button
       type="button"
       onclick="kingzTCGLoadHeldCards()">
       Refresh My Held Cards
     </button>
-
+ 
     <div
       id="kingztcg-held-cards"
       aria-live="polite">
@@ -1069,8 +1076,31 @@ async function kingzTCGLoadReceiptInvoices() {
       </p>
     </div>
   </div>
+ 
+  <!-- Combined mailing of eligible paid cards already on Hold. -->
+  <div class="panel" id="kingztcg-combined-mailing-panel">
+    <h3 style="color:#e9c66c; margin-top:0;">✉ Combine & Mail My Held Cards</h3>
+    <p class="muted">Send all eligible paid cards currently on Hold in one tracked shipment. Mailing is S$3.50 once per shipment.</p>
+    <div id="kingztcg-combined-preview" class="combined-preview" aria-live="polite">
+      Open Collection to check your eligible cards and saved mailing address.
+    </div>
+    <div class="combined-fee">
+      <span>Tracked mailing fee</span><strong>S$3.50</strong>
+    </div>
+    <p class="muted">Your mailing fee must be verified manually. Cards will not be dispatched until payment is confirmed.</p>
+    <button type="button" id="kingztcg-combined-refresh" class="combined-secondary"
+      onclick="kingzTCGLoadCombinedMailingPreview()">Refresh Mailing Details</button>
+    <button type="button" id="kingztcg-combined-submit" class="profile-save" disabled
+      onclick="kingzTCGSubmitCombinedMailing()">Confirm Combined Mailing — S$3.50</button>
+    <p id="kingztcg-combined-status" class="profile-message muted" role="status" aria-live="polite"></p>
+    <div id="kingztcg-combined-result" class="combined-result" hidden>
+      <strong>Shipment ID</strong>
+      <div id="kingztcg-combined-shipment-id" class="combined-shipment-id"></div>
+      <button type="button" class="combined-secondary" onclick="kingzTCGCopyCombinedShipmentId()">Copy Shipment ID</button>
+    </div>
+  </div>
 </section>
-
+ 
  
   <section id="profile" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
@@ -1144,22 +1174,200 @@ async function kingzTCGLoadReceiptInvoices() {
 <script>
  
  
+ 
+// Combined Mailing: read-only preview followed by one confirmed write.
+// The API verifies Telegram identity, profile, invoices, fees and duplicates.
+let kingzTCGCombinedPreview = null;
+let kingzTCGCombinedBusy = false;
+let kingzTCGCombinedSubmitted = false;
+ 
+function kingzTCGCombinedStatus(message, success) {
+  const status = document.getElementById('kingztcg-combined-status');
+  if (!status) return;
+  status.textContent = message;
+  status.style.color = success ? '#b7e0b5' : '#c4c5c8';
+}
+ 
+async function kingzTCGCombinedApi(action, extras) {
+  const initData = window.Telegram?.WebApp?.initData;
+  if (!initData) throw new Error('Please reopen KingzTCG inside Telegram.');
+  const response = await fetch(KINGZTCG_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body: JSON.stringify(Object.assign({ action: action, initData: initData }, extras || {}))
+  });
+  if (!response.ok) throw new Error('Unable to connect to KingzTCG.');
+  return await response.json();
+}
+ 
+async function kingzTCGLoadCombinedMailingPreview() {
+  const preview = document.getElementById('kingztcg-combined-preview');
+  const submit = document.getElementById('kingztcg-combined-submit');
+  const refresh = document.getElementById('kingztcg-combined-refresh');
+  if (!preview || !submit || !refresh || kingzTCGCombinedBusy || kingzTCGCombinedSubmitted) return;
+ 
+  kingzTCGCombinedPreview = null;
+  submit.disabled = true;
+  refresh.disabled = true;
+  preview.textContent = 'Checking your paid Held Cards and saved mailing address...';
+  kingzTCGCombinedStatus('', false);
+ 
+  try {
+    const results = await Promise.all([
+      kingzTCGCombinedApi('held_cards'),
+      kingzTCGCombinedApi('customer_profile', { profileAction: 'get' })
+    ]);
+    const held = results[0];
+    const customer = results[1];
+    if (held.success !== true || !Array.isArray(held.cards)) {
+      throw new Error('Unable to check your held cards.');
+    }
+    if (customer.success !== true) {
+      throw new Error('Unable to load your saved mailing address.');
+    }
+ 
+    const invoices = Array.from(new Set(held.cards.map(function(card) {
+      return String(card.invoiceId || '').trim();
+    }).filter(Boolean)));
+    const cardCount = held.cards.reduce(function(total, card) {
+      return total + (Number(card.quantity) || 0);
+    }, 0);
+    const profile = customer.profile || {};
+    const complete = ['fullName','contactNumber','mailingAddress','postalCode','country']
+      .every(function(field) { return String(profile[field] || '').trim().length > 0; });
+ 
+    if (invoices.length === 0) {
+      preview.textContent = 'No eligible paid cards currently on Hold.\nThere is nothing to mail yet.';
+      return;
+    }
+    if (!complete) {
+      preview.textContent = 'You have ' + cardCount + ' held card(s) across ' +
+        invoices.length + ' invoice(s).\nPlease complete all fields in My Profile before mailing.';
+      kingzTCGCombinedStatus('Go to My Profile, save your mailing details, then refresh here.', false);
+      return;
+    }
+ 
+    const address = [profile.mailingAddress, profile.postalCode, profile.country]
+      .map(function(value) { return String(value || '').trim(); }).join(', ');
+    preview.textContent =
+      'Held cards: ' + cardCount + '\n' +
+      'Invoices: ' + invoices.join(', ') + '\n\n' +
+      'Recipient: ' + String(profile.fullName) + '\n' +
+      'Contact: ' + String(profile.contactNumber) + '\n' +
+      'Mailing address: ' + address;
+    kingzTCGCombinedPreview = { invoiceCount: invoices.length, cardCount: cardCount, address: address };
+    submit.disabled = false;
+  } catch (error) {
+    preview.textContent = 'Unable to load mailing details.';
+    kingzTCGCombinedStatus(error.message || 'Please try again.', false);
+  } finally {
+    refresh.disabled = false;
+  }
+}
+ 
+async function kingzTCGSubmitCombinedMailing() {
+  const submit = document.getElementById('kingztcg-combined-submit');
+  const refresh = document.getElementById('kingztcg-combined-refresh');
+  const resultPanel = document.getElementById('kingztcg-combined-result');
+  const shipmentField = document.getElementById('kingztcg-combined-shipment-id');
+  if (!submit || !refresh || !kingzTCGCombinedPreview ||
+      kingzTCGCombinedBusy || kingzTCGCombinedSubmitted) return;
+ 
+  const confirmed = window.confirm(
+    'Combine ALL eligible paid Held Cards into ONE tracked shipment?\n\n' +
+    'Cards: ' + kingzTCGCombinedPreview.cardCount + '\n' +
+    'Invoices: ' + kingzTCGCombinedPreview.invoiceCount + '\n' +
+    'Mailing address: ' + kingzTCGCombinedPreview.address + '\n\n' +
+    'Tracked mailing: S$3.50 (one time)\n' +
+    'Mailing fee payment requires manual verification.\n\n' +
+    'Select OK to submit your request.'
+  );
+  if (!confirmed) return;
+ 
+  kingzTCGCombinedBusy = true;
+  submit.disabled = true;
+  refresh.disabled = true;
+  kingzTCGCombinedStatus('Submitting your shipment request. Please wait...', false);
+ 
+  try {
+    // No invoice IDs, customer ID, address, fee or payment status are trusted from the browser.
+    const result = await kingzTCGCombinedApi('combined_mailing_request');
+    if (result.success !== true) {
+      if (result.reason === 'no_eligible_held_invoices') {
+        kingzTCGCombinedStatus('No eligible held invoices remain. Refresh to check your cards.', false);
+        return;
+      }
+      if (result.reason === 'profile_required' || result.reason === 'incomplete_profile') {
+        kingzTCGCombinedStatus('Please update My Profile and refresh this page.', false);
+        return;
+      }
+      throw new Error('Submission was not confirmed: ' + String(result.reason || 'unknown_error'));
+    }
+ 
+    kingzTCGCombinedSubmitted = true;
+    const shipmentId = String(result.shipmentId || '').trim();
+    shipmentField.textContent = shipmentId;
+    resultPanel.hidden = !shipmentId;
+    document.getElementById('kingztcg-combined-preview').textContent =
+      'Shipment request recorded. Mailing fee: S$3.50. Payment status: Not Verified.';
+    if (result.adminNotificationSuccess === false) {
+      kingzTCGCombinedStatus(
+        'Your shipment was saved, but the admin notification needs manual review. ' +
+        'Please contact KingzTCG admin with your Shipment ID. Do not submit again.', true
+      );
+    } else {
+      kingzTCGCombinedStatus(
+        'Shipment request saved! Admins have been notified. ' +
+        'Do not dispatch until the mailing fee is verified.', true
+      );
+    }
+    await kingzTCGLoadHeldCards();
+  } catch (error) {
+    // A timeout can occur AFTER the server has saved the request.
+    // Keep Submit disabled to prevent an accidental duplicate shipment.
+    kingzTCGCombinedSubmitted = true;
+    kingzTCGCombinedStatus(
+      'Submission status is uncertain. Please check with KingzTCG admin ' +
+      'before trying again. ' + String(error.message || ''), false
+    );
+  } finally {
+    kingzTCGCombinedBusy = false;
+    if (!kingzTCGCombinedSubmitted) refresh.disabled = false;
+    // Only a fresh eligibility check can re-enable the Submit button.
+  }
+}
+ 
+async function kingzTCGCopyCombinedShipmentId() {
+  const shipmentId = document.getElementById('kingztcg-combined-shipment-id')?.textContent?.trim();
+  if (!shipmentId) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(shipmentId);
+      kingzTCGCombinedStatus('Shipment ID copied.', true);
+    } else {
+      window.prompt('Copy your Shipment ID:', shipmentId);
+    }
+  } catch (error) {
+    window.prompt('Copy your Shipment ID:', shipmentId);
+  }
+}
+ 
 // Collection choice UI only. Saving requests and applying mailing fees require
 // an authenticated backend action; never alter balances on the client.
   
 async function kingzTCGLoadHeldCards() {
   const container = document.getElementById('kingztcg-held-cards');
   if (!container) return;
-
+ 
   container.textContent = 'Loading your held cards...';
-
+ 
   try {
     const initData = window.Telegram?.WebApp?.initData;
-
+ 
     if (!initData) {
       throw new Error('Please open KingzTCG inside Telegram.');
     }
-
+ 
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
       headers: {
@@ -1170,13 +1378,13 @@ async function kingzTCGLoadHeldCards() {
         initData: initData
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('Unable to connect to KingzTCG.');
     }
-
+ 
     const result = await response.json();
-
+ 
     if (result.success !== true) {
       throw new Error(
         result.reason === 'authentication_expired'
@@ -1184,9 +1392,9 @@ async function kingzTCGLoadHeldCards() {
           : 'Unable to load your held cards.'
       );
     }
-
+ 
     container.replaceChildren();
-
+ 
     if (!Array.isArray(result.cards) || result.cards.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'muted';
@@ -1194,63 +1402,63 @@ async function kingzTCGLoadHeldCards() {
       container.appendChild(empty);
       return;
     }
-
+ 
  
 const heldCards = result.cards;
-
+ 
 const totalCards = heldCards.reduce(function(sum, card) {
   return sum + (Number(card.quantity) || 0);
 }, 0);
-
+ 
 const totalValue = heldCards.reduce(function(sum, card) {
   return sum + (Number(card.subtotal) || 0);
 }, 0);
-
+ 
 const summary = document.createElement('div');
 summary.style.cssText =
   'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;';
-
+ 
 function makeSummary(label, value) {
   const box = document.createElement('div');
   box.style.cssText =
     'background:#1d1d23;border:1px solid #52452a;' +
     'border-radius:12px;padding:16px;';
-
+ 
   const title = document.createElement('div');
   title.textContent = label;
   title.style.cssText = 'color:#aaa;font-size:12px;';
-
+ 
   const amount = document.createElement('div');
   amount.textContent = value;
   amount.style.cssText =
     'color:#d8b86a;font-size:22px;font-weight:bold;margin-top:8px;';
-
+ 
   box.appendChild(title);
   box.appendChild(amount);
   return box;
 }
-
+ 
 summary.appendChild(makeSummary('Total Cards', String(totalCards)));
 summary.appendChild(
   makeSummary('Total Value', 'S$' + totalValue.toFixed(2))
 );
 container.appendChild(summary);
-
+ 
 heldCards.forEach(function(card) {
   const panel = document.createElement('div');
   panel.style.cssText =
     'background:#1d1d23;border:1px solid #52452a;' +
     'border-radius:12px;padding:16px;margin-bottom:12px;';
-
+ 
   const name = document.createElement('strong');
   name.textContent = String(card.cardName || 'Unnamed card');
   name.style.cssText = 'color:#f1d58a;font-size:16px;';
-
+ 
   const status = document.createElement('div');
   status.textContent = 'On Hold';
   status.style.cssText =
     'color:#d8b86a;font-size:12px;margin-top:6px;';
-
+ 
   const details = document.createElement('p');
   details.style.cssText =
     'color:#aaa;font-size:13px;line-height:1.7;';
@@ -1258,53 +1466,53 @@ heldCards.forEach(function(card) {
     'Quantity: ' + String(card.quantity || '1') +
     ' | Value: S$' + (Number(card.subtotal) || 0).toFixed(2) +
     ' | Invoice: ' + String(card.invoiceId || '');
-
+ 
   panel.appendChild(name);
   panel.appendChild(status);
   panel.appendChild(details);
   container.appendChild(panel);
 });
-
+ 
   } catch (error) {
     container.textContent =
       error.message || 'Unable to load your held cards.';
   }
 }
-
+ 
 async function kingzTCGChooseCollection(method) {
   const valid = ['hold', 'mail', 'self_collection'];
   if (!valid.includes(method)) return;
-
+ 
   // Prevent duplicate submissions while saving.
   if (kingzTCGChooseCollection.busy) return;
   kingzTCGChooseCollection.busy = true;
-
+ 
   const buttons = document.querySelectorAll('.fulfilment-choice');
   const note = document.getElementById('kingztcg-fulfilment-note');
-
+ 
   const labels = {
     hold: 'Hold',
     mail: 'Mail',
     self_collection: 'Self-Collection'
   };
-
+ 
   buttons.forEach(function(button) {
     button.disabled = true;
   });
-
+ 
   if (note) {
     note.textContent = 'Saving your ' + labels[method] + ' selection...';
   }
-
+ 
   try {
     const initData = window.Telegram &&
       window.Telegram.WebApp &&
       window.Telegram.WebApp.initData;
-
+ 
     if (!initData) {
       throw new Error('Please open the app through Telegram.');
     }
-
+ 
     const response = await fetch(KINGZTCG_API_URL, {
       method: 'POST',
       headers: {
@@ -1316,31 +1524,31 @@ async function kingzTCGChooseCollection(method) {
         collectionMethod: method
       })
     });
-
+ 
     if (!response.ok) {
       throw new Error('Unable to connect to KingzTCG.');
     }
-
+ 
     const result = await response.json();
-
+ 
     if (!result.success) {
       if (result.reason === 'profile_required') {
         throw new Error(
           'Please complete your name, contact number and mailing address in My Profile before choosing Mail.'
         );
       }
-
+ 
       if (result.reason === 'authentication_expired') {
         throw new Error(
           'Your Telegram session has expired. Please reopen the Mini App.'
         );
       }
-
+ 
       throw new Error(
         'Unable to save your selection. Please try again.'
       );
     }
-
+ 
     buttons.forEach(function(button) {
       button.setAttribute(
         'aria-pressed',
@@ -1370,7 +1578,7 @@ async function kingzTCGChooseCollection(method) {
           labels[method] + ' selection saved successfully!';
       }
     }
-
+ 
   } catch (error) {
     if (note) {
       note.textContent = error.message ||
@@ -1378,13 +1586,13 @@ async function kingzTCGChooseCollection(method) {
     }
   } finally {
     kingzTCGChooseCollection.busy = false;
-
+ 
     buttons.forEach(function(button) {
       button.disabled = false;
     });
   }
 }
-
+ 
 // Customer Profile: requests are authenticated by Telegram initData on the server.
 function kingzTCGProfileStatus(message, success) {
   const status = document.getElementById('kingztcg-profile-status');
@@ -1496,6 +1704,11 @@ function showPage(pageId) {
   }
  
   window.scrollTo(0, 0);
+ 
+  if (pageId === 'collection') {
+    kingzTCGLoadHeldCards();
+    kingzTCGLoadCombinedMailingPreview();
+  }
  
   if (pageId === 'profile') {
     kingzTCGConnectProfileForm();
