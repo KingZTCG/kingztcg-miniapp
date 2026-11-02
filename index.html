@@ -1138,7 +1138,22 @@ async function kingzTCGLoadReceiptInvoices() {
   <h3>Mailing Fee Payment</h3>
   <p>Tracked mailing fee: <strong>S$3.50</strong></p>
   <p class="muted"> Pay using the KingzTCG PayNow QR code.Upload your bank transfer screenshot below.</p>
- <div id="kingztcg-mailing-paynow-qr"></div>
+ 
+<div id="kingztcg-mailing-paynow-qr"
+     style="text-align:center; margin:20px 0;">
+
+  <img
+    src="paynow-qr.JPG"
+    alt="KingzTCG PayNow QR Code"
+    style="width:100%; max-width:280px; height:auto; background:white; padding:12px; border-radius:12px; box-sizing:border-box;"
+  >
+
+  <p class="muted">
+    Please transfer S$3.50 and upload your payment screenshot.
+  </p>
+
+</div>
+
   <label for="kingztcg-mailing-receipt-file"> Payment screenshot
   </label>
   <input type="file" id="kingztcg-mailing-receipt-file" accept="image/jpeg,image/png,image/webp" >
