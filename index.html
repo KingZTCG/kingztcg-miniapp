@@ -193,6 +193,9 @@ async function kingzTCGLoadAdminMailingRequests() {
     }
 
     const result = await response.json();
+    
+console.log('KingzTCG mailing API response:', result);
+
 
     if (result.success !== true ||
         !Array.isArray(result.requests)) {
