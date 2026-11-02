@@ -163,7 +163,7 @@ async function kingzTCGLoadPendingPayments() {
     container.textContent =
       'Unable to load pending payments.';
   }
-
+}
   
 async function kingzTCGLoadAdminMailingRequests() {
   const container = document.getElementById(
@@ -368,17 +368,7 @@ async function kingzTCGSubmitAdminPaymentAction(
     }
  
     const result = await response.json();
-    
-    container.textContent =
-      'API DEBUG — success: ' +
-      String(result.success) +
-      ' | receipts: ' +
-      (Array.isArray(result.receipts)
-        ? result.receipts.length
-        : 'missing') +
-      ' | reason: ' +
-      String(result.reason || 'none');
-
+  
  
     if (result.success === true) {
       window.alert(
@@ -404,7 +394,7 @@ async function kingzTCGSubmitAdminPaymentAction(
     );
   }
 }
-}
+
  
 async function kingzTCGCheckAdminAccess() {
   const adminButton = document.getElementById('nav-admin');
