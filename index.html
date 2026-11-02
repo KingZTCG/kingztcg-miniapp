@@ -163,7 +163,84 @@ async function kingzTCGLoadPendingPayments() {
     container.textContent =
       'Unable to load pending payments.';
   }
- 
+
+  
+async function kingzTCGLoadAdminMailingRequests() {
+  const container = document.getElementById(
+    'kingztcg-admin-mailing-requests'
+  );
+
+  const telegram = window.Telegram?.WebApp;
+
+  if (!container || !telegram?.initData) return;
+
+  container.textContent = 'Loading mailing requests...';
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8'
+      },
+      body: JSON.stringify({
+        action: 'admin_mailing_requests',
+        initData: telegram.initData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Mailing requests connection failed.');
+    }
+
+    const result = await response.json();
+
+    if (result.success !== true ||
+        !Array.isArray(result.requests)) {
+      throw new Error('Unable to retrieve mailing requests.');
+    }
+
+    container.replaceChildren();
+
+    if (result.requests.length === 0) {
+      container.textContent = 'No mailing requests found.';
+      return;
+    }
+
+    result.requests.forEach(function(request) {
+      const card = document.createElement('div');
+      card.className = 'panel';
+      card.style.marginBottom = '12px';
+
+      const shipment = document.createElement('h4');
+      shipment.textContent =
+        'Shipment: ' + String(request.shipmentId || '');
+
+      const status = document.createElement('p');
+      status.textContent =
+        'Status: ' + String(request.status || 'Unknown');
+
+      const submitted = document.createElement('p');
+      submitted.textContent =
+        'Submitted: ' + String(request.submittedAt || 'Unknown');
+
+      const fee = document.createElement('p');
+      fee.textContent = 'Mailing Fee: S$3.50';
+
+      card.appendChild(shipment);
+      card.appendChild(status);
+      card.appendChild(submitted);
+      card.appendChild(fee);
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error('Mailing requests error:', error);
+    container.textContent =
+      'Unable to load mailing requests.';
+  }
+}
+
 async function kingzTCGSubmitAdminPaymentAction(
   receiptId,
   paymentAction
