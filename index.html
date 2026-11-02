@@ -1386,7 +1386,32 @@ async function kingzTCGLoadReceiptInvoices() {
   </p>
 </div>
 
+   </div>
+
+  <!-- Customer mailing requests and shipment history -->
+  <div class="panel" id="kingztcg-mailing-history-panel">
+    <h3>🚚 My Mailing Requests &amp; History</h3>
+
+    <p class="muted">
+      View your submitted mailing requests,
+      payment status and tracking information.
+    </p>
+
+    <button
+      type="button"
+      onclick="kingzTCGLoadCustomerMailingHistory()">
+      Refresh Mailing History
+    </button>
+
+    <div
+      id="kingztcg-mailing-history"
+      aria-live="polite">
+      <p class="muted">
+        Your mailing history has not been loaded yet.
+      </p>
+    </div>
   </div>
+
 </section>
  
  
