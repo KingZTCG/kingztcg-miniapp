@@ -1361,8 +1361,18 @@ async function kingzTCGSubmitCombinedMailing() {
  
     kingzTCGCombinedSubmitted = true;
     const shipmentId = String(result.shipmentId || '').trim();
-    shipmentField.textContent = shipmentId;
-    resultPanel.hidden = !shipmentId;
+  
+shipmentField.textContent = shipmentId;
+resultPanel.hidden = !shipmentId;
+
+const mailingPaymentPanel = document.getElementById(
+  'kingztcg-mailing-payment'
+);
+
+if (mailingPaymentPanel) {
+  mailingPaymentPanel.hidden = !shipmentId;
+}
+
     document.getElementById('kingztcg-combined-preview').textContent =
       'Shipment request recorded. Mailing fee: S$3.50. Payment status: Not Verified.';
     if (result.adminNotificationSuccess === false) {
