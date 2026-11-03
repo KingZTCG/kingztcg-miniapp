@@ -1256,6 +1256,9 @@ async function kingzTCGLoadReceiptInvoices() {
     .collection-view h2 { color: #e9c66c; margin-bottom: 17px; }
     .collection-view > .panel { margin-top: 13px; }
     .collection-view .panel .muted { line-height: 1.5; }
+    /* Compact notice shown only on the Mailing Requests screen. */
+    .mailing-disclaimer { margin: 14px 0; padding: 12px 13px; border-left: 3px solid #e9c66c; background: #1b1c20; border-radius: 8px; color: #c4c5c8; font-size: 12px; line-height: 1.6; }
+    .mailing-disclaimer strong { color: #e9c66c; display: block; margin-bottom: 3px; }
   </style>
 </head>
  
@@ -1520,6 +1523,7 @@ async function kingzTCGLoadReceiptInvoices() {
       <span>Tracked mailing fee</span><strong>S$3.50</strong>
     </div>
     <p class="muted">Dispatch after manual payment verification.</p>
+    <p class="mailing-disclaimer" role="note"><strong>Delivery Notice</strong>Once dispatched, KingzTCG is not responsible for loss or damage caused during courier transit, except where required by law. Tracking details will be provided.</p>
     <button type="button" id="kingztcg-combined-refresh" class="combined-secondary"
       onclick="kingzTCGLoadCombinedMailingPreview()">Refresh Mailing Details</button>
     <button type="button" id="kingztcg-combined-submit" class="profile-save" disabled
@@ -1824,6 +1828,7 @@ async function kingzTCGSubmitCombinedMailing() {
     'Mailing address: ' + kingzTCGCombinedPreview.address + '\n\n' +
     'Tracked mailing: S$3.50 (one time)\n' +
     'Mailing fee payment requires manual verification.\n\n' +
+    'Delivery Notice: Once dispatched, KingzTCG is not responsible for loss or damage caused during courier transit, except where required by law. Tracking details will be provided.\n\n' +
     'Select OK to submit your request.'
   );
   if (!confirmed) return;
@@ -2292,9 +2297,20 @@ if (result.reason === 'receipt_already_submitted') {
 async function kingzTCGChooseCollection(method) {
   const valid = ['hold', 'mail', 'self_collection'];
   if (!valid.includes(method)) return;
- 
+
   // Prevent duplicate submissions while saving.
   if (kingzTCGChooseCollection.busy) return;
+
+  // Show the transit notice before saving a new mailing selection.
+  if (method === 'mail') {
+    const acknowledged = window.confirm(
+      'Tracked mailing — S$3.50\n\n' +
+      'Delivery Notice: Once dispatched, KingzTCG is not responsible for loss or damage caused during courier transit, except where required by law. Tracking details will be provided.\n\n' +
+      'Select OK to continue with mailing, or Cancel to go back.'
+    );
+    if (!acknowledged) return;
+  }
+
   kingzTCGChooseCollection.busy = true;
  
   const buttons = document.querySelectorAll('.fulfilment-choice');
