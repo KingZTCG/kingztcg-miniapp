@@ -1208,6 +1208,29 @@ async function kingzTCGLoadReceiptInvoices() {
     .orders-status { border: 1px solid #5c5031; border-radius: 999px; padding: 7px 9px; color: #e9c66c; background: #2d291e; font-size: 11px; }
     .orders-status.paid { border-color: #36684e; background: #1c3327; color: #9edab7; }
     .orders-empty { color: #a6aab2; font-size: 13px; line-height: 1.6; }
+
+    /* KingzTCG Collection navigation and read-only Self-Collection history. */
+    .collection-choices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin:18px 0; }
+    .collection-choice { min-width:0; background:#24262b; color:#e9c66c; border:1px solid #5c5031; border-radius:13px; padding:15px 6px; font:inherit; font-size:12px; font-weight:bold; cursor:pointer; }
+    .collection-choice small { display:block; margin-top:7px; color:#a6aab2; font-size:10px; font-weight:normal; line-height:1.4; }
+    .collection-choice:focus-visible { outline:2px solid #e9c66c; outline-offset:3px; }
+    .self-collection-location { margin:14px 0; padding:15px; background:#191a1e; border:1px solid #8b753e; border-radius:12px; }
+    .self-collection-location strong { display:block; color:#e9c66c; font-size:13px; margin-bottom:7px; }
+    .self-collection-location p { margin:0; color:#fff; font-size:15px; line-height:1.5; }
+    .self-collection-location small { display:block; margin-top:8px; color:#a6aab2; font-size:12px; line-height:1.5; }
+    .self-collection-warning { margin:14px 0; padding:13px; border-radius:11px; background:#2b2619; border:1px solid #8b753e; color:#f0dfb0; font-size:13px; line-height:1.6; }
+    .self-collection-fee { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px; background:#191a1e; border:1px solid #5c5031; border-radius:12px; margin:15px 0; }
+    .self-collection-fee strong { color:#e9c66c; font-size:21px; }
+    .self-collection-history { margin-top:15px; }
+    .self-collection-order { padding:15px; background:#191a1e; border:1px solid #393c42; border-radius:12px; margin:10px 0; }
+    .self-collection-order h4 { color:#fff; margin:0 0 8px; font-size:14px; }
+    .self-collection-order p { color:#c5c6ca; font-size:12px; line-height:1.6; margin:7px 0; }
+    .self-collection-status { color:#e9c66c !important; font-weight:bold; }
+    .self-collection-status.paid { color:#9edab7 !important; }
+    .self-collection-admin-links { display:grid; gap:9px; margin-top:15px; }
+    .self-collection-admin-link { display:block; padding:13px 10px; border-radius:10px; background:#d4af37; color:#101114; font-size:14px; font-weight:bold; text-decoration:none; text-align:center; }
+    .self-collection-admin-link.secondary { background:#1b1c20; border:1px solid #8b753e; color:#e9c66c; }
+    .self-collection-admin-link:focus-visible { outline:2px solid #fff; outline-offset:3px; }
   </style>
 </head>
  
@@ -1311,7 +1334,7 @@ async function kingzTCGLoadReceiptInvoices() {
       <button type="button" class="fulfilment-choice" data-method="self_collection" aria-pressed="false" onclick="kingzTCGChooseCollection('self_collection')">
         <span class="choice-icon" aria-hidden="true">⌂</span>
         <strong>Self-Collection</strong>
-        <small>Arrange pickup</small>
+        <small>Contact admin early</small>
       </button>
     </div>
     <p class="fulfilment-note" id="kingztcg-fulfilment-note" aria-live="polite">
@@ -1414,11 +1437,14 @@ async function kingzTCGLoadReceiptInvoices() {
   <button class="back" onclick="showPage('home')">← Back</button>
  
   <h2>👑 Collection</h2>
-  <p class="muted">
-    Manage your paid cards held with KingzTCG.
-  </p>
- 
-  <div class="panel">
+  <p class="muted">Manage your held cards, tracked mailing and free self-collection.</p>
+  <div class="collection-choices" role="group" aria-label="Collection sections">
+    <button type="button" class="collection-choice" onclick="kingzTCGJumpCollection('kingztcg-held-panel')">▣ Held Cards<small>Paid cards on hold</small></button>
+    <button type="button" class="collection-choice" onclick="kingzTCGJumpCollection('kingztcg-mailing-history-panel')">✉ Mailing<small>Requests &amp; tracking</small></button>
+    <button type="button" class="collection-choice" onclick="kingzTCGJumpCollection('kingztcg-self-collection-panel')">⌂ Self-Collection<small>Free · Pre-arranged</small></button>
+  </div>
+
+  <div class="panel" id="kingztcg-held-panel">
     <h3>My Held Cards</h3>
     <p class="muted">
       Only fully paid cards selected for Card Hold
@@ -1529,6 +1555,30 @@ async function kingzTCGLoadReceiptInvoices() {
         Your mailing history has not been loaded yet.
       </p>
     </div>
+  </div>
+
+  <!-- Read-only Self-Collection: uses authenticated My Orders data. -->
+  <div class="panel" id="kingztcg-self-collection-panel">
+    <h3 style="color:#e9c66c; margin-top:0;">⌂ Self-Collection</h3>
+    <p class="muted">Choose Self-Collection in the Payment page, then contact admin @kydenxwyl early to arrange your preferred pickup date and time.</p>
+    <div class="self-collection-fee">
+      <span>Self-collection fee</span><strong>FREE · S$0.00</strong>
+    </div>
+    <div class="self-collection-location">
+      <strong>COLLECTION LOCATION</strong>
+      <p>Holland Avenue, Singapore 271008</p>
+      <small>The admin will confirm the exact meeting details and collection time.</small>
+    </div>
+    <div class="self-collection-warning" role="note">
+      <strong>Advance arrangement required.</strong> Please contact admin @kydenxwyl early, before your intended collection date. Self-collection is strictly by confirmed appointment only — no walk-ins. Do not travel to the location until the admin has confirmed your pickup.
+    </div>
+    <p class="muted">Cards will only be released after payment has been manually verified. A collection is marked completed only after the actual handover.</p>
+    <button type="button" class="combined-secondary" onclick="kingzTCGLoadSelfCollection()">Refresh Self-Collection Status</button>
+    <div id="kingztcg-self-collection-history" class="self-collection-history" aria-live="polite">Open Collection to check your self-collection requests.</div>
+    <div class="self-collection-admin-links">
+      <a class="self-collection-admin-link" href="https://t.me/kydenxwyl" target="_blank" rel="noopener noreferrer">Contact Admin @kydenxwyl — Arrange Pickup</a>
+    </div>
+    <p class="muted">Already paid for cards on Hold? Contact @kydenxwyl before changing their collection arrangement. Sending a message does not automatically change an order's status.</p>
   </div>
 
 </section>
@@ -2288,6 +2338,9 @@ async function kingzTCGChooseCollection(method) {
       if (method === 'mail') {
         note.textContent =
         'Mail request saved! Tracked mailing is S$3.50 per shipment. If you have any cards currently on Hold with KingzTCG, please contact our admin to arrange combined mailing.';
+      } else if (method === 'self_collection') {
+        note.textContent =
+          'Self-Collection saved. Please contact admin @kydenxwyl early to pre-arrange pickup at Holland Avenue, Singapore 271008. No walk-ins; wait for appointment confirmation. Cards are released only after payment verification.';
       } else {
         note.textContent =
           labels[method] + ' selection saved successfully!';
@@ -2574,6 +2627,89 @@ async function kingzTCGLoadMyOrders() {
   }
 }
 
+
+// Step 5E: Self-Collection is read-only. Existing Payment > Self-Collection
+// saves the request; no new backend route or payment write is required.
+function kingzTCGJumpCollection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function kingzTCGLoadSelfCollection() {
+  const container = document.getElementById('kingztcg-self-collection-history');
+  if (!container) return;
+  container.textContent = 'Loading your self-collection requests...';
+
+  try {
+    const result = await kingzTCGCombinedApi('my_orders');
+    if (result.success !== true || !Array.isArray(result.orders)) {
+      throw new Error('Unable to retrieve your self-collection requests.');
+    }
+
+    const grouped = new Map();
+    result.orders.forEach(function(order) {
+      const status = String(order.fulfilmentStatus || '').trim().toLowerCase();
+      if (!status.includes('self-collection') && status !== 'collected') return;
+      const orderId = String(order.orderId || '').trim();
+      if (!orderId) return;
+      if (!grouped.has(orderId)) {
+        grouped.set(orderId, {
+          paid: kingzTCGOrdersPaymentPaid(order),
+          collected: status === 'collected',
+          cards: []
+        });
+      }
+      const group = grouped.get(orderId);
+      // Conservative on conflicting rows: never declare paid unless all are paid.
+      group.paid = group.paid && kingzTCGOrdersPaymentPaid(order);
+      group.collected = group.collected && status === 'collected';
+      group.cards.push({
+        name: String(order.cardName || 'Unnamed card'),
+        quantity: Number(order.quantity) || 0
+      });
+    });
+
+    container.replaceChildren();
+    if (grouped.size === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'muted';
+      empty.textContent = 'No self-collection requests yet. To request free pickup for an unpaid invoice, open Payment and choose Self-Collection.';
+      container.appendChild(empty);
+      return;
+    }
+
+    Array.from(grouped.values()).reverse().forEach(function(group) {
+      const card = document.createElement('div');
+      card.className = 'self-collection-order';
+      const heading = document.createElement('h4');
+      heading.textContent = 'Self-Collection Request';
+      card.appendChild(heading);
+
+      const details = document.createElement('p');
+      details.textContent = group.cards.map(function(item) {
+        return item.name + ' × ' + item.quantity;
+      }).join(' · ');
+      card.appendChild(details);
+
+      const status = document.createElement('p');
+      status.className = 'self-collection-status';
+      if (!group.paid) {
+        status.textContent = 'Payment not verified — contact @kydenxwyl early to pre-arrange; no pickup until payment and appointment are confirmed';
+      } else if (group.collected) {
+        status.textContent = 'Collected — handover recorded';
+        status.classList.add('paid');
+      } else {
+        status.textContent = 'Payment verified — contact @kydenxwyl early to confirm your Holland Avenue pickup appointment';
+        status.classList.add('paid');
+      }
+      card.appendChild(status);
+      container.appendChild(card);
+    });
+  } catch (error) {
+    container.textContent = error.message || 'Unable to load self-collection requests.';
+  }
+}
+
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(function(page) {
     page.classList.remove('active');
@@ -2597,6 +2733,7 @@ if (pageId === 'collection') {
   kingzTCGLoadHeldCards();
   kingzTCGLoadCombinedMailingPreview();
   kingzTCGLoadCustomerMailingHistory();
+  kingzTCGLoadSelfCollection();
 }
 
  
