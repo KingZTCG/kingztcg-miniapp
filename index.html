@@ -1231,6 +1231,31 @@ async function kingzTCGLoadReceiptInvoices() {
     .self-collection-admin-link { display:block; padding:13px 10px; border-radius:10px; background:#d4af37; color:#101114; font-size:14px; font-weight:bold; text-decoration:none; text-align:center; }
     .self-collection-admin-link.secondary { background:#1b1c20; border:1px solid #8b753e; color:#e9c66c; }
     .self-collection-admin-link:focus-visible { outline:2px solid #fff; outline-offset:3px; }
+
+    /* Compact Collection landing: show only three clear actions. */
+    .collection-page-heading { margin-bottom: 4px; color: #fff; }
+    .collection-page-subtitle { color: #a6aab2; font-size: 13px; margin: 0 0 22px; }
+    .collection-landing { display: grid; gap: 12px; }
+    .collection-menu-card {
+      width: 100%; display: flex; align-items: center; gap: 14px;
+      padding: 18px 15px; background: #24262b; color: #fff;
+      border: 1px solid #393c42; border-radius: 16px;
+      text-align: left; font: inherit; cursor: pointer; min-height: 83px;
+    }
+    .collection-menu-card:active { background: #2c2b29; }
+    .collection-menu-card:focus-visible { outline: 2px solid #e9c66c; outline-offset: 3px; }
+    .collection-menu-icon {
+      flex: 0 0 48px; height: 48px; display: grid; place-items: center;
+      border-radius: 12px; background: #342d1d; color: #e9c66c; font-size: 25px;
+    }
+    .collection-menu-copy { flex: 1; min-width: 0; }
+    .collection-menu-copy strong { display: block; font-size: 15px; line-height: 1.4; }
+    .collection-menu-copy small { display: block; color: #a6aab2; font-size: 12px; margin-top: 4px; line-height: 1.4; }
+    .collection-menu-arrow { color: #e9c66c; font-size: 29px; line-height: 1; }
+    #kingztcg-collection-menu[hidden], .collection-view[hidden] { display: none !important; }
+    .collection-view h2 { color: #e9c66c; margin-bottom: 17px; }
+    .collection-view > .panel { margin-top: 13px; }
+    .collection-view .panel .muted { line-height: 1.5; }
   </style>
 </head>
  
@@ -1434,49 +1459,67 @@ async function kingzTCGLoadReceiptInvoices() {
  
   
 <section id="collection" class="page">
-  <button class="back" onclick="showPage('home')">← Back</button>
- 
-  <h2>👑 Collection</h2>
-  <p class="muted">Manage your held cards, tracked mailing and free self-collection.</p>
-  <div class="collection-choices" role="group" aria-label="Collection sections">
-    <button type="button" class="collection-choice" onclick="kingzTCGJumpCollection('kingztcg-held-panel')">▣ Held Cards<small>Paid cards on hold</small></button>
-    <button type="button" class="collection-choice" onclick="kingzTCGJumpCollection('kingztcg-mailing-history-panel')">✉ Mailing<small>Requests &amp; tracking</small></button>
-    <button type="button" class="collection-choice" onclick="kingzTCGJumpCollection('kingztcg-self-collection-panel')">⌂ Self-Collection<small>Free · Pre-arranged</small></button>
+  <div id="kingztcg-collection-menu">
+    <button class="back" onclick="showPage('home')">← Back</button>
+    <h2 class="collection-page-heading">My Collection</h2>
+    <p class="collection-page-subtitle">Your cards, your way.</p>
+    <div class="collection-landing" aria-label="Collection options">
+      <button type="button" class="collection-menu-card" onclick="kingzTCGOpenCollectionSection('held')">
+        <span class="collection-menu-icon" aria-hidden="true">▣</span>
+        <span class="collection-menu-copy"><strong>My Held Cards</strong><small>View paid cards on hold</small></span>
+        <span class="collection-menu-arrow" aria-hidden="true">›</span>
+      </button>
+      <button type="button" class="collection-menu-card" onclick="kingzTCGOpenCollectionSection('mail')">
+        <span class="collection-menu-icon" aria-hidden="true">✉</span>
+        <span class="collection-menu-copy"><strong>Mailing Requests</strong><small>Ship cards &amp; track parcels</small></span>
+        <span class="collection-menu-arrow" aria-hidden="true">›</span>
+      </button>
+      <button type="button" class="collection-menu-card" onclick="kingzTCGOpenCollectionSection('self')">
+        <span class="collection-menu-icon" aria-hidden="true">⌂</span>
+        <span class="collection-menu-copy"><strong>Self-Collection</strong><small>Free pickup by appointment</small></span>
+        <span class="collection-menu-arrow" aria-hidden="true">›</span>
+      </button>
+    </div>
   </div>
 
-  <div class="panel" id="kingztcg-held-panel">
-    <h3>My Held Cards</h3>
+  <div id="kingztcg-collection-held-view" class="collection-view" hidden>
+    <button type="button" class="back" onclick="kingzTCGCloseCollectionSection()">← My Collection</button>
+    <h2>My Held Cards</h2>
+    <div class="panel" id="kingztcg-held-panel">
     <p class="muted">
-      Only fully paid cards selected for Card Hold
-      will appear here.
+      Your paid cards on hold with KingzTCG.
     </p>
  
     <button
       type="button"
       onclick="kingzTCGLoadHeldCards()">
-      Refresh My Held Cards
+      Refresh Cards
     </button>
  
     <div
       id="kingztcg-held-cards"
       aria-live="polite">
       <p class="muted">
-        Your held cards have not been loaded yet.
+        Tap Refresh Cards to view your held cards.
       </p>
     </div>
   </div>
- 
-  <!-- Combined mailing of eligible paid cards already on Hold. -->
+  </div>
+
+  <div id="kingztcg-collection-mail-view" class="collection-view" hidden>
+    <button type="button" class="back" onclick="kingzTCGCloseCollectionSection()">← My Collection</button>
+    <h2>Mailing Requests</h2>
+    <!-- Combined mailing of eligible paid cards already on Hold. -->
   <div class="panel" id="kingztcg-combined-mailing-panel">
     <h3 style="color:#e9c66c; margin-top:0;">✉ Combine & Mail My Held Cards</h3>
-    <p class="muted">Send all eligible paid cards currently on Hold in one tracked shipment. Mailing is S$3.50 once per shipment.</p>
+    <p class="muted">Mail your eligible held cards together in one tracked parcel.</p>
     <div id="kingztcg-combined-preview" class="combined-preview" aria-live="polite">
-      Open Collection to check your eligible cards and saved mailing address.
+      Tap Refresh Mailing Details to check eligible cards and address.
     </div>
     <div class="combined-fee">
       <span>Tracked mailing fee</span><strong>S$3.50</strong>
     </div>
-    <p class="muted">Your mailing fee must be verified manually. Cards will not be dispatched until payment is confirmed.</p>
+    <p class="muted">Dispatch after manual payment verification.</p>
     <button type="button" id="kingztcg-combined-refresh" class="combined-secondary"
       onclick="kingzTCGLoadCombinedMailingPreview()">Refresh Mailing Details</button>
     <button type="button" id="kingztcg-combined-submit" class="profile-save" disabled
@@ -1538,8 +1581,7 @@ async function kingzTCGLoadReceiptInvoices() {
     <h3>🚚 My Mailing Requests &amp; History</h3>
 
     <p class="muted">
-      View your submitted mailing requests,
-      payment status and tracking information.
+      View shipment status and tracking numbers.
     </p>
 
     <button
@@ -1552,35 +1594,38 @@ async function kingzTCGLoadReceiptInvoices() {
       id="kingztcg-mailing-history"
       aria-live="polite">
       <p class="muted">
-        Your mailing history has not been loaded yet.
+        Tap Refresh Mailing History to check your shipments.
       </p>
     </div>
   </div>
+  </div>
 
-  <!-- Read-only Self-Collection: uses authenticated My Orders data. -->
+  <div id="kingztcg-collection-self-view" class="collection-view" hidden>
+    <button type="button" class="back" onclick="kingzTCGCloseCollectionSection()">← My Collection</button>
+    <h2>Self-Collection</h2>
+    <!-- Read-only Self-Collection: uses authenticated My Orders data. -->
   <div class="panel" id="kingztcg-self-collection-panel">
-    <h3 style="color:#e9c66c; margin-top:0;">⌂ Self-Collection</h3>
-    <p class="muted">Choose Self-Collection in the Payment page, then contact admin @kydenxwyl early to arrange your preferred pickup date and time.</p>
+    <p class="muted">Select Self-Collection during payment and arrange pickup early with @kydenxwyl.</p>
     <div class="self-collection-fee">
       <span>Self-collection fee</span><strong>FREE · S$0.00</strong>
     </div>
     <div class="self-collection-location">
       <strong>COLLECTION LOCATION</strong>
       <p>Holland Avenue, Singapore 271008</p>
-      <small>The admin will confirm the exact meeting details and collection time.</small>
+      <small>Admin confirms the exact meeting point and time.</small>
     </div>
     <div class="self-collection-warning" role="note">
-      <strong>Advance arrangement required.</strong> Please contact admin @kydenxwyl early, before your intended collection date. Self-collection is strictly by confirmed appointment only — no walk-ins. Do not travel to the location until the admin has confirmed your pickup.
+      <strong>Appointment required.</strong> Contact @kydenxwyl early. No walk-ins; wait for admin confirmation before travelling.
     </div>
-    <p class="muted">Cards will only be released after payment has been manually verified. A collection is marked completed only after the actual handover.</p>
-    <button type="button" class="combined-secondary" onclick="kingzTCGLoadSelfCollection()">Refresh Self-Collection Status</button>
-    <div id="kingztcg-self-collection-history" class="self-collection-history" aria-live="polite">Open Collection to check your self-collection requests.</div>
+    <p class="muted">Cards are released only after verified payment and confirmed pickup.</p>
+    <button type="button" class="combined-secondary" onclick="kingzTCGLoadSelfCollection()">Refresh Status</button>
+    <div id="kingztcg-self-collection-history" class="self-collection-history" aria-live="polite">Tap Refresh Status to check your requests.</div>
     <div class="self-collection-admin-links">
-      <a class="self-collection-admin-link" href="https://t.me/kydenxwyl" target="_blank" rel="noopener noreferrer">Contact Admin @kydenxwyl — Arrange Pickup</a>
+      <a class="self-collection-admin-link" href="https://t.me/kydenxwyl" target="_blank" rel="noopener noreferrer">Contact @kydenxwyl — Arrange Pickup</a>
     </div>
-    <p class="muted">Already paid for cards on Hold? Contact @kydenxwyl before changing their collection arrangement. Sending a message does not automatically change an order's status.</p>
+    <p class="muted">For cards already on Hold, ask admin before changing collection method.</p>
   </div>
-
+  </div>
 </section>
  
  
@@ -2630,9 +2675,46 @@ async function kingzTCGLoadMyOrders() {
 
 // Step 5E: Self-Collection is read-only. Existing Payment > Self-Collection
 // saves the request; no new backend route or payment write is required.
+// The Collection landing is a simple menu. Details load only when opened.
+function kingzTCGCloseCollectionSection() {
+  const menu = document.getElementById('kingztcg-collection-menu');
+  if (menu) menu.hidden = false;
+  ['held', 'mail', 'self'].forEach(function(name) {
+    const view = document.getElementById('kingztcg-collection-' + name + '-view');
+    if (view) view.hidden = true;
+  });
+  window.scrollTo(0, 0);
+}
+
+function kingzTCGOpenCollectionSection(name) {
+  if (!['held', 'mail', 'self'].includes(name)) return;
+  const menu = document.getElementById('kingztcg-collection-menu');
+  if (menu) menu.hidden = true;
+  ['held', 'mail', 'self'].forEach(function(key) {
+    const view = document.getElementById('kingztcg-collection-' + key + '-view');
+    if (view) view.hidden = key !== name;
+  });
+  window.scrollTo(0, 0);
+
+  if (name === 'held') {
+    kingzTCGLoadHeldCards();
+  } else if (name === 'mail') {
+    kingzTCGLoadCombinedMailingPreview();
+    kingzTCGLoadCustomerMailingHistory();
+  } else {
+    kingzTCGLoadSelfCollection();
+  }
+}
+
+// Keep the old jump helper for compatibility with any existing calls.
 function kingzTCGJumpCollection(sectionId) {
-  const section = document.getElementById(sectionId);
-  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const map = {
+    'kingztcg-held-panel': 'held',
+    'kingztcg-combined-mailing-panel': 'mail',
+    'kingztcg-mailing-history-panel': 'mail',
+    'kingztcg-self-collection-panel': 'self'
+  };
+  if (map[sectionId]) kingzTCGOpenCollectionSection(map[sectionId]);
 }
 
 async function kingzTCGLoadSelfCollection() {
@@ -2730,10 +2812,7 @@ function showPage(pageId) {
   window.scrollTo(0, 0);
  
 if (pageId === 'collection') {
-  kingzTCGLoadHeldCards();
-  kingzTCGLoadCombinedMailingPreview();
-  kingzTCGLoadCustomerMailingHistory();
-  kingzTCGLoadSelfCollection();
+  kingzTCGCloseCollectionSection();
 }
 
  
