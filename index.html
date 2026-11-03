@@ -1188,6 +1188,26 @@ async function kingzTCGLoadReceiptInvoices() {
     .combined-secondary:disabled { opacity:.45; cursor:not-allowed; }
     .combined-result { margin-top:16px; border:1px solid #8b753e; padding:14px; border-radius:12px; color:#e9c66c; }
     .combined-shipment-id { margin-top:9px; overflow-wrap:anywhere; font-size:14px; color:#fff; }
+
+    /* KingzTCG My Orders — individual card purchase history. */
+    .orders-intro { color: #a6aab2; font-size: 13px; line-height: 1.6; margin: 8px 0 18px; }
+    .orders-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; margin-bottom: 4px; scrollbar-width: thin; }
+    .orders-filter { flex: 0 0 auto; padding: 10px 13px; border: 1px solid #48433a; border-radius: 999px; background: #24262b; color: #c8c9ce; font: inherit; font-size: 12px; cursor: pointer; }
+    .orders-filter[aria-pressed="true"] { background: #302918; border-color: #e9c66c; color: #e9c66c; font-weight: bold; }
+    .orders-summary { display: flex; justify-content: space-between; gap: 12px; margin: 14px 0; color: #a6aab2; font-size: 12px; }
+    .orders-summary strong { color: #e9c66c; font-size: 14px; }
+    .orders-card { background: #24262b; border: 1px solid #393c42; border-radius: 15px; padding: 17px; margin-bottom: 12px; }
+    .orders-card-top { display: flex; gap: 12px; align-items: flex-start; }
+    .orders-card-symbol { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; border-radius: 11px; background: #322a19; color: #e9c66c; font-size: 23px; }
+    .orders-card-title { font-size: 15px; font-weight: bold; color: #fff; line-height: 1.35; overflow-wrap: anywhere; }
+    .orders-card-date { margin-top: 4px; font-size: 11px; color: #a6aab2; }
+    .orders-card-price { color: #e9c66c; font-weight: bold; font-size: 16px; white-space: nowrap; margin-left: auto; }
+    .orders-card-detail { margin-top: 13px; color: #c5c6ca; font-size: 12px; line-height: 1.7; }
+    .orders-card-divider { border: 0; border-top: 1px solid #393c42; margin: 13px 0; }
+    .orders-statuses { display: flex; flex-wrap: wrap; gap: 7px; }
+    .orders-status { border: 1px solid #5c5031; border-radius: 999px; padding: 7px 9px; color: #e9c66c; background: #2d291e; font-size: 11px; }
+    .orders-status.paid { border-color: #36684e; background: #1c3327; color: #9edab7; }
+    .orders-empty { color: #a6aab2; font-size: 13px; line-height: 1.6; }
   </style>
 </head>
  
@@ -1242,8 +1262,20 @@ async function kingzTCGLoadReceiptInvoices() {
  
   <section id="orders" class="page">
     <button class="back" onclick="showPage('home')">← Back</button>
-    <h2>📦 My Orders</h2>
-    <div class="panel muted">Your claimed cards will appear here.</div>
+    <h2>Pokémon Card Purchases &amp; Order History</h2>
+    <p class="orders-intro">View every card you've purchased, including completed orders. Payments are confirmed only after manual verification.</p>
+    <div class="orders-filters" role="group" aria-label="Filter card purchases">
+      <button type="button" class="orders-filter" data-order-filter="all" aria-pressed="true" onclick="kingzTCGSetOrdersFilter('all')">All</button>
+      <button type="button" class="orders-filter" data-order-filter="pending" aria-pressed="false" onclick="kingzTCGSetOrdersFilter('pending')">Pending</button>
+      <button type="button" class="orders-filter" data-order-filter="hold" aria-pressed="false" onclick="kingzTCGSetOrdersFilter('hold')">On Hold</button>
+      <button type="button" class="orders-filter" data-order-filter="mailing" aria-pressed="false" onclick="kingzTCGSetOrdersFilter('mailing')">Mailing</button>
+      <button type="button" class="orders-filter" data-order-filter="collected" aria-pressed="false" onclick="kingzTCGSetOrdersFilter('collected')">Collected</button>
+    </div>
+    <button type="button" class="combined-secondary" onclick="kingzTCGLoadMyOrders()">Refresh My Orders</button>
+    <div id="kingztcg-orders-summary" class="orders-summary" aria-live="polite"></div>
+    <div id="kingztcg-orders-list" aria-live="polite">
+      <div class="panel orders-empty">Open My Orders to load your card purchases.</div>
+    </div>
   </section>
  
   <section id="invoices" class="page">
@@ -2369,6 +2401,179 @@ function kingzTCGConnectProfileForm() {
   });
 }
  
+// My Orders — customer-scoped read-only purchase history.
+// Never infer payment verification from a receipt upload.
+let kingzTCGOrdersCache = [];
+let kingzTCGOrdersFilter = 'all';
+
+function kingzTCGOrdersPaymentPaid(order) {
+  return String(order.paymentStatus || '').trim().toLowerCase() === 'paid';
+}
+
+function kingzTCGOrdersFulfilment(order) {
+  const status = String(order.fulfilmentStatus || 'Not Selected').trim();
+  const key = status.toLowerCase();
+  const paid = kingzTCGOrdersPaymentPaid(order);
+  if (key === 'on hold' && !paid) return 'Hold Requested — Awaiting Payment';
+  if (key === 'mailing') return paid ? 'Mailing Requested' : 'Mailing Requested — Awaiting Payment';
+  if (key === 'self-collection') return paid ? 'Self-Collection Requested' : 'Self-Collection Requested — Awaiting Payment';
+  return status || 'Not Selected';
+}
+
+function kingzTCGSetOrdersFilter(filter) {
+  if (!['all', 'pending', 'hold', 'mailing', 'collected'].includes(filter)) return;
+  kingzTCGOrdersFilter = filter;
+  document.querySelectorAll('[data-order-filter]').forEach(function(button) {
+    button.setAttribute('aria-pressed', String(button.dataset.orderFilter === filter));
+  });
+  kingzTCGRenderMyOrders();
+}
+
+function kingzTCGRenderMyOrders() {
+  const list = document.getElementById('kingztcg-orders-list');
+  const summary = document.getElementById('kingztcg-orders-summary');
+  if (!list || !summary) return;
+  list.replaceChildren();
+  summary.replaceChildren();
+
+  const all = kingzTCGOrdersCache;
+  const filtered = all.filter(function(order) {
+    const paid = kingzTCGOrdersPaymentPaid(order);
+    const fulfilment = kingzTCGOrdersFulfilment(order).toLowerCase();
+    if (kingzTCGOrdersFilter === 'pending') return !paid;
+    if (kingzTCGOrdersFilter === 'hold') return paid && fulfilment === 'on hold';
+    if (kingzTCGOrdersFilter === 'mailing') return fulfilment.includes('mailing') || fulfilment === 'shipped';
+    if (kingzTCGOrdersFilter === 'collected') return fulfilment === 'collected';
+    return true;
+  });
+
+  const count = document.createElement('span');
+  count.textContent = filtered.length + ' card entr' + (filtered.length === 1 ? 'y' : 'ies');
+  summary.appendChild(count);
+
+  const value = document.createElement('strong');
+  const sum = filtered.reduce(function(total, order) {
+    const n = Number(order.totalPrice);
+    return total + (Number.isFinite(n) && n >= 0 ? n : 0);
+  }, 0);
+  value.textContent = 'Card total: S$' + sum.toFixed(2);
+  summary.appendChild(value);
+
+  if (!filtered.length) {
+    const empty = document.createElement('div');
+    empty.className = 'panel orders-empty';
+    empty.textContent = all.length
+      ? 'No card purchases match this filter.'
+      : 'No card purchases found yet. Your purchases will appear here when linked to your Telegram account.';
+    list.appendChild(empty);
+    return;
+  }
+
+  // Newer spreadsheet entries appear first; no card images are required.
+  filtered.slice().reverse().forEach(function(order) {
+    const card = document.createElement('article');
+    card.className = 'orders-card';
+    const top = document.createElement('div');
+    top.className = 'orders-card-top';
+
+    const symbol = document.createElement('div');
+    symbol.className = 'orders-card-symbol';
+    symbol.textContent = '✦';
+    symbol.setAttribute('aria-hidden', 'true');
+
+    const nameBox = document.createElement('div');
+    nameBox.style.minWidth = '0';
+    nameBox.style.flex = '1';
+    const name = document.createElement('div');
+    name.className = 'orders-card-title';
+    name.textContent = String(order.cardName || 'Unnamed card');
+    nameBox.appendChild(name);
+    if (order.orderDate) {
+      const date = document.createElement('div');
+      date.className = 'orders-card-date';
+      date.textContent = String(order.orderDate);
+      nameBox.appendChild(date);
+    }
+
+    const total = Number(order.totalPrice);
+    const price = document.createElement('div');
+    price.className = 'orders-card-price';
+    price.textContent = Number.isFinite(total) && total >= 0
+      ? 'S$' + total.toFixed(2) : '—';
+
+    top.appendChild(symbol);
+    top.appendChild(nameBox);
+    top.appendChild(price);
+    card.appendChild(top);
+
+    const detail = document.createElement('div');
+    detail.className = 'orders-card-detail';
+    const qty = Number(order.quantity);
+    const unit = Number(order.unitPrice);
+    detail.textContent = 'Quantity: ' + (Number.isFinite(qty) ? qty : '—') +
+      '  ·  Unit price: ' + (Number.isFinite(unit) && unit >= 0 ? 'S$' + unit.toFixed(2) : '—');
+    card.appendChild(detail);
+
+    const divider = document.createElement('hr');
+    divider.className = 'orders-card-divider';
+    card.appendChild(divider);
+
+    const statuses = document.createElement('div');
+    statuses.className = 'orders-statuses';
+    const payment = document.createElement('span');
+    payment.className = 'orders-status';
+    const paid = kingzTCGOrdersPaymentPaid(order);
+    if (paid) {
+      payment.textContent = '✓ Payment Confirmed';
+      payment.classList.add('paid');
+    } else {
+      const raw = String(order.paymentStatus || '').toLowerCase();
+      payment.textContent = raw.includes('pending') ? 'Payment Pending' : 'Payment Unconfirmed';
+    }
+    const fulfilment = document.createElement('span');
+    fulfilment.className = 'orders-status';
+    fulfilment.textContent = kingzTCGOrdersFulfilment(order);
+    statuses.appendChild(payment);
+    statuses.appendChild(fulfilment);
+    card.appendChild(statuses);
+    list.appendChild(card);
+  });
+}
+
+async function kingzTCGLoadMyOrders() {
+  const list = document.getElementById('kingztcg-orders-list');
+  const summary = document.getElementById('kingztcg-orders-summary');
+  if (!list || !summary) return;
+  kingzTCGOrdersCache = [];
+  list.textContent = 'Loading your card purchases...';
+  summary.textContent = '';
+
+  const initData = window.Telegram?.WebApp?.initData;
+  if (!initData) {
+    list.textContent = 'Please open KingzTCG inside Telegram.';
+    return;
+  }
+
+  try {
+    const response = await fetch(KINGZTCG_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body: JSON.stringify({ action: 'my_orders', initData: initData })
+    });
+    if (!response.ok) throw new Error('Unable to connect to KingzTCG.');
+    const result = await response.json();
+    if (result.success !== true || !Array.isArray(result.orders)) {
+      console.error('My Orders API response:', result.reason || 'invalid_response');
+      throw new Error('Unable to load your orders. Please try again or contact an admin.');
+    }
+    kingzTCGOrdersCache = result.orders;
+    kingzTCGRenderMyOrders();
+  } catch (error) {
+    console.error('My Orders load failed:', error);
+    list.textContent = error.message || 'Unable to load your orders.';
+  }
+}
+
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(function(page) {
     page.classList.remove('active');
@@ -2400,6 +2605,11 @@ if (pageId === 'collection') {
     kingzTCGLoadCustomerProfile();
   }
  
+  // Automatically load customer card purchases when My Orders opens.
+  if (pageId === 'orders') {
+    kingzTCGLoadMyOrders();
+  }
+
   // Automatically load invoices when the customer opens My Invoices.
   if (pageId === 'invoices') {
     testKingzTCGMyInvoices();
