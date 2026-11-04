@@ -2282,7 +2282,11 @@ if (result.reason === 'receipt_already_submitted') {
       paymentSection.appendChild(uploadButton);
       paymentSection.appendChild(uploadStatus);
 
-      panel.appendChild(paymentSection);
+      
+      // Show PayNow only when mailing payment is needed.
+      if (canUploadReceipt && Number(shipment.mailingFee) > 0) {
+        panel.appendChild(paymentSection);
+      }
 
       container.appendChild(panel);
     });
