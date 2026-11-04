@@ -2284,9 +2284,21 @@ if (result.reason === 'receipt_already_submitted') {
 
       
       // Show PayNow only when mailing payment is needed.
-      if (canUploadReceipt && Number(shipment.mailingFee) > 0) {
+     
+      // Only combined mailing requires a separate payment.
+      const isCombinedMail =
+        String(shipment.collectionMethod || '')
+          .trim()
+          .toLowerCase() === 'combined_mail';
+
+      if (
+        isCombinedMail &&
+        canUploadReceipt &&
+        Number(shipment.mailingFee) > 0
+      ) {
         panel.appendChild(paymentSection);
       }
+
 
       container.appendChild(panel);
     });
